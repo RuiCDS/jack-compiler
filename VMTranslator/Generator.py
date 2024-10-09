@@ -46,7 +46,7 @@ class Generator:
     def _commandpush(self, command):
         """No comment"""
         segment = command['segment']
-        # segment=local|argument|static|constant|this|that|pointer
+        # segment=local|argument|static|constant|this|that|pointer|temp
         match segment:
             # Faire une fonction par type de segment
             case 'constant':
