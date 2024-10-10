@@ -1,19 +1,18 @@
 class ArithmeticLog:
 
-    def __init__(self, commande):
-        self.commande = commande
-        self.type = commande['type']
+    def __init__(self):
+        pass
 
-    def execute(self):
+    def execute(self, commande):
+        type_cmd = commande['type']
 
-        match self.type:
+        match type_cmd:
             case 'add':
-                return self.add(self.commande)
+                return self.add(commande)
             case 'sub':
-                return self.sub(self.commande)
+                return self.sub(commande)
             case 'equal':
-                return self.equal(self.commande)
-
+                return self.equal(commande)
 
     def add(self, commande):
         return f"""// add : {commande}
@@ -35,18 +34,18 @@ class ArithmeticLog:
         @SP           // Accéder à nouveau à la pile
         AM=M-1        // Décrémenter SP pour obtenir la deuxième valeur
         D=D-M         // Soustraire la deuxième valeur de la première (D contient le résultat)
-        @EQUAL_TRUE_{commande}  // Aller à l'étiquette EQUAL_TRUE si le résultat est zéro (égalité)
+        @EQUAL_TRUE_{commande['type']}  // Aller à l'étiquette EQUAL_TRUE si le résultat est zéro (égalité)
         D;JEQ         // Si D == 0, alors les valeurs sont égales
         @SP           // Si non égal, on place 0 sur la pile
         A=M           // Accéder au sommet de la pile
         M=0           // Placer 0 (faux) au sommet
-        @EQUAL_END_{commande}   // Sauter à la fin
+        @EQUAL_END_{commande['type']}   // Sauter à la fin
         0;JMP
-    (EQUAL_TRUE_{commande})
+    (EQUAL_TRUE_{commande['type']})
         @SP           // Si égal, on place 1 sur la pile
         A=M
         M=-1          // Placer -1 (vrai) au sommet
-    (EQUAL_END_{commande})
+    (EQUAL_END_{commande['type']})
         @SP           // Incrémenter SP
         M=M+1
         """
@@ -63,7 +62,7 @@ class ArithmeticLog:
         M=M+1         // Incrémenter SP pour préparer le sommet suivant
         """
 
-# Exemple d'utilisation :
+
 commande = {'type': 'add'}
-arith_log = ArithmeticLog(commande)
-print(arith_log.execute())
+arith_log = ArithmeticLog()
+print(arith_log.execute(commande))

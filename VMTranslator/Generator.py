@@ -1,8 +1,6 @@
-"""No comment"""
-
 import sys
 import Parser
-import AritmeticLog
+import ArithmeticLog
 
 
 class Generator:
@@ -13,8 +11,8 @@ class Generator:
         if file is not None:
             self.parser = Parser.Parser(file)
 
-        self.arit.log = AritmeticLog.AritmeticLog()
 
+        self.arithmetic_log = ArithmeticLog.ArithmeticLog()
 
     def __iter__(self):
         return self
@@ -44,7 +42,12 @@ class Generator:
                 case 'Call':
                     return self.commandcall(command)
                 case 'add':
-                    return self.
+                    # Appel à l'instance ArithmeticLog avec la commande
+                    return self.arithmetic_log.add(command)
+                case 'sub':
+                    return self.arithmetic_log.sub(command)
+                case 'equal':
+                    return self.arithmetic_log.equal(command)
                 case _:
                     print(f'SyntaxError : {command}')
                     exit()
