@@ -24,8 +24,12 @@ class ParserBob:
 
     def label(self, commande):
         return f"""// label : {commande}
-    ({commande})    // Définir le label {commande} pour le saut
-    """
+        ({commande}) // Def le label {commande} pour le saut
+
+            """ if commande[0] != '(' else \
+        f""" // label : {commande}
+        {commande}      // Def le label {commande} pour le saut"""
+
 
     def add(self, commande):
         return f"""// add : {commande}
