@@ -38,7 +38,7 @@ class Generator:
             match type:
                 # Faire une fonction par type de commande
                 case 'push':
-                    return self._commandpush(command)
+                    return self.PushPop.commandpushpop(command)
                 case 'Call':
                     return self.commandcall(command)
                 case 'add':
