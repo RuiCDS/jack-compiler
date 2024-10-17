@@ -8,196 +8,143 @@ class ArithmeticLog:
 
         match type_cmd:
             case 'add':
-                return self.add(commande)
+                return self._add()
             case 'sub':
-                return self.sub(commande)
+                return self._sub()
             case 'equal':
-                return self.equal(commande)
+                return self._eq()
             case 'greater':
-                return self.greater(commande)
+                return self._gt()
             case 'lower':
-                return self.lower(commande)
+                return self._lt()
             case 'negative':
-                return self.negative(commande)
+                return self._neg()
             case 'and':
-                return self.AND(commande)
+                return self._and()
+            case 'or':
+                return self._or()
+            case 'not':
+                return self._not()
 
 
-    def add(self, commande):
-        return f"""// add : {commande}
-        @SP
-        A=M
-        A=A-1
-        D=M     //On stock dans D la deuxième valeur
-        M=0
-        @SP
-        M=M-1
-        @SP
-        A=M
-        A=A-1
-        M=D+M       //On ajoute la deuxième valeur à la première
-        """
+    def _add(self):
+        return """
+    @SP
+    AM=M-1
+    D=M
+    A=A-1
+    M=D+M
+    """
 
-    def sub(self, commande):
-        return f"""// sub : {commande}
-        @SP
-        A=M
-        A=A-1
-        D=M     //On stock dans D la deuxième valeur
-        M=0
-        @SP
-        M=M-1
-        @SP
-        A=M
-        A=A-1
-        M=M-D       //On soustrait la deuxième valeur à la première
-        """
+    def _sub(self):
+        return """
+    @SP
+    AM=M-1
+    D=M
+    A=A-1
+    M=M-D
+    """
 
-    def equal(self, commande):
-        return f"""// equal : {commande}
-        @SP
-        //Aller a la première valeur
-        A=M
-        A=A-1
-        D=M     //On stock dans D la deuxième valeur
-        A=A-1
-        M=M-D       //On stock la différence entre les deux valeurs à l'emplacement de la première
-        @SP
-        M=M-1
-        A=M
-        M=0     //On enlève la deuxième valeur
-        //Mettre l'emplacement de la première valeur à -1 si elle est différente de 0
-        @SP     //Début condition JUMP (si v1=V2)
-        A=M
-        A=A-1
-        D=M
-        @END
-        D;JNE       //Fin condition JUMP (si v1!=V2)
-        @0
-        D=A-1       //D = -1
-        @SP
-        A=M
-        A=A-1
-        M=D     //Emplacement de la première valeur = -1
-        (END)
-        """
+    def _neg(self):
+        return """
+    @SP
+    A=M-1
+    M=-M
+    """
 
-    def greater(self, commande):
-        return f"""// greater: {commande}
-        //Vérifie si val1 > val2
-        //Val1=-1 if true else 0
-        @SP
-        A=M
-        A=A-1
-        D=M     //On stock dans D la deuxième valeur
-        M=0
-        @SP
-        M=M-1       //val2 dépilée
-        @SP
-        A=M
-        A=A-1
-        M=M-D       //On soustrait la deuxième valeur à la première
-        D=M
-        @IF_TRUE
-        D;JGT
-        @SP
-        A=M
-        A=A-1
-        M=0
-        @END
-        0;JMP
-        (IF_TRUE)
-        @0
-        D=A-1
-        @SP
-        A=M
-        A=A-1
-        M=D
-        (END)
-        """
+    def _eq(self):
+        label_true = self._get_unique_label()
+        label_end = self._get_unique_label()
+        return f"""
+    @SP
+    AM=M-1
+    D=M
+    A=A-1
+    D=M-D
+    @{label_true}
+    D;JEQ
+    @SP
+    A=M-1
+    M=0
+    @{label_end}
+    0;JMP
+    ({label_true})
+    @SP
+    A=M-1
+    M=-1
+    ({label_end})
+    """
 
-    def lower(self, commande):
-        return f"""// greater: {commande}
-                //Vérifie si val1 > val2
-                //Val1=-1 if true else 0
-                @SP
-                A=M
-                A=A-1
-                D=M     //On stock dans D la deuxième valeur
-                M=0
-                @SP
-                M=M-1       //val2 dépilée
-                @SP
-                A=M
-                A=A-1
-                M=M-D       //On soustrait la deuxième valeur à la première
-                D=M
-                @IF_TRUE
-                D;JLT
-                @SP
-                A=M
-                A=A-1
-                M=0
-                @END
-                0;JMP
-                (IF_TRUE)
-                @0
-                D=A-1
-                @SP
-                A=M
-                A=A-1
-                M=D
-                (END)
-                """
+    def _gt(self):
+        label_true = self._get_unique_label()
+        label_end = self._get_unique_label()
+        return f"""
+    @SP
+    AM=M-1
+    D=M
+    A=A-1
+    D=M-D
+    @{label_true}
+    D;JGT
+    @SP
+    A=M-1
+    M=0
+    @{label_end}
+    0;JMP
+    ({label_true})
+    @SP
+    A=M-1
+    M=-1
+    ({label_end})
+    """
 
-    def negative(self, commande):
-        return f"""// negative: {commande}
-        @SP
-        A=M
-        A=A-1
-        D=M
-        M=M-D
-        M=M-D
-        """
+    def _lt(self):
+        label_true = self._get_unique_label()
+        label_end = self._get_unique_label()
+        return f"""
+    @SP
+    AM=M-1
+    D=M
+    A=A-1
+    D=M-D
+    @{label_true}
+    D;JLT
+    @SP
+    A=M-1
+    M=0
+    @{label_end}
+    0;JMP
+    ({label_true})
+    @SP
+    A=M-1
+    M=-1
+    ({label_end})
+    """
 
-    def AND(self, commande):
-        return f"""// and: {commande}
-        @SP
-        A=M
-        A=A-1
-        D=M     //D=val2
-        M=0
-        @SP
-        M=M-1
-        @FALSE
-        D=D+1
-        D;JNE       //Si val2=false goto FALSE
-        @SP
-        A=M
-        A=A-1
-        D=M     //D=val1
-        @FALSE
-        D=D+1
-        D;JNE       //Si val=false goto FALSE
-        //Début condition true
-        @0
-        D=A-1
-        @SP
-        A=M
-        A=A-1
-        M=D
-        @END
-        0;JMP
-        //Fin condition true
-        //Début condition false
-        (FALSE)
-        D=0
-        @SP
-        A=M
-        A=A-1
-        M=D
-        (END)
-        """
+    def _and(self):
+        return """
+    @SP
+    AM=M-1
+    D=M
+    A=A-1
+    M=D&M
+    """
+
+    def _or(self):
+        return """
+    @SP
+    AM=M-1
+    D=M
+    A=A-1
+    M=D|M
+    """
+
+    def _not(self):
+        return """
+    @SP
+    A=M-1
+    M=!M
+    """
 
 
 
