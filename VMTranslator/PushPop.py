@@ -14,13 +14,25 @@ class PushPop:
         """No comment"""
         parameter = command['parameter']
         return f"""\t//{command['type']} {command['segment']} {parameter}
-        @{parameter}     // Charger la valeur ou la variable {parameter}
-        D=A             // Stocker la valeur dans D (ou A pour une constante)
-        @SP             // Accéder à la pile
-        A=M             // Accéder à l'adresse pointée par SP
-        M=D             // Stocker la valeur de D au sommet de la pile
-        @SP             // Accéder à nouveau au pointeur de pile
-        M=M+1           // Incrémenter SP pour préparer le prochain emplacement"""
+        @{parameter}
+        D=A
+        @SP
+        AM=M+1
+        A=M
+        M=D
+        """
+
+    def _commandpushpointer(self, command):
+        """No comment"""
+        parameter = command['parameter']
+        return f"""\t//{command['type']} {command['segment']} {parameter}
+        @{parameter}
+        D=M
+        @SP
+        AM=M+1
+        A=M
+        M=D
+        """
 
     def _commandpushsegment(self,command):
         """No comment"""
@@ -93,10 +105,61 @@ class PushPop:
             base = 'THAT'
 
         return f"""\t//{command['type']} {segment} {parameter}
-        @{parameter}
-        D=M
         @{base}
-        
+        D=M
+        @{parameter}
+        D=D+A
+        @R13
+        M=D
+        @SP
+        AM=M-1
+        D=M
+        @R13
+        A=M
+        M=D
+        """
+
+    def _commandpoppointer(self,command):
+        """No comment"""
+        parameter = command['parameter']
+        return f"""\t//{command['type']} {parameter}
+        @SP
+        AM=M-1
+        D=M
+        @{parameter}
+        M=D
+        """
+
+    def _commandpopstatic(self,command):
+        """No comment"""
+        parameter = command['parameter']
+        file=f"{fileName}.{parameter}"
+        return f"""\t//{command['type']} {parameter}
+        @file
+        AM=M-1
+        D=M
+        @{parameter}
+        M=D
+        """
+
+
+    def _commandpoptemp(self,command):
+        """No comment"""
+        parameter = command['parameter']
+        return f"""\t//{command['type']} {parameter}
+        @5
+        D=A
+        @{parameter}
+        D=D+A
+        @R13
+        M=D
+        @SP
+        AM=M-1
+        D=M
+        @R13
+        A=M
+        M=D
+        """
         
         
 
