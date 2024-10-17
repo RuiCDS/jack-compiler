@@ -21,10 +21,10 @@ class Branching:
     def if_goto(self, commande):
         return f""" // if-goto : {commande}
         @SP
-        D=A
-        
-        @{commande["label"]
-        0;JMP
+        AM=M-1
+        D=M
+        @{commande["label"]}
+        D;JLT
         """
 
 
