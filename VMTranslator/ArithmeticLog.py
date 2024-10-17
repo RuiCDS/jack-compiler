@@ -1,7 +1,7 @@
 class ArithmeticLog:
 
     def __init__(self):
-        pass
+        self.label_counter = 0
 
     def execute(self, commande):
         type_cmd = commande['type']
@@ -26,6 +26,9 @@ class ArithmeticLog:
             case 'not':
                 return self._not()
 
+    def _get_unique_label(self):
+        self.label_counter += 1
+        return f"LABEL_{self.label_counter}"
 
     def _add(self):
         return """
