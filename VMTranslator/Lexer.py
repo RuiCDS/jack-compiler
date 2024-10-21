@@ -94,7 +94,7 @@ class Lexer:
         # No comment
         return re.compile(r"""
             (?P<pushpop>push|pop) |
-            (?P<segment>local|argument|static|constant|this|that|pointer) |
+            (?P<segment>local|argument|static|constant|this|that|pointer|temp) |
             (?P<branching>label|goto|if-goto) |
             (?P<arithmetic>add|sub|neg|eq|gt|lt|and|or|not) |
             (?P<function>Function|Call) |
