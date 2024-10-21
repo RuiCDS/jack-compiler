@@ -1,6 +1,7 @@
 import sys
 import Parser
 import ArithmeticLog
+from VMTranslator.PushPop import PushPop
 
 
 class Generator:
@@ -59,16 +60,34 @@ class Generator:
         match segment:
             # Faire une fonction par type de segment
             case 'constant':
-                return self._commandpushconstant(command)
-            case _:
+                return PushPop._commandpushconstant(command)
+            case 'pointer':
+                return PushPop._commandpushpointer(command)
+            case 'segment':
+                return PushPop._commandpushsegment(command)
+            case 'temp':
+                return PushPop._commandpushtemp(command)
+            case 'static':
+                return PushPop._commandpushstatic(command)
+            case "":
                 print(f'SyntaxError : {command}')
                 exit()
-
-    def _commandpushconstant(self, command):
-        """No comment"""
-        parameter = command['parameter']
-        return f"""\t//{command['type']} {command['segment']} {parameter}
-    Code assembleur de {command}\n"""
+    def _commandpop(self, command):
+        segment = command['segment']
+        match segment:
+            case 'constant':
+                return PushPop._commandpopconstant(command)
+            case 'pointer':
+                return PushPop._commandpoppointer(command)
+            case 'segment':
+                return PushPop._commandpopsegment(command)
+            case 'temp':
+                return PushPop._commandpoptemp(command)
+            case 'static':
+                return PushPop._commandpopstatic(command)
+            case "":
+                print(f'SyntaxError : {command}')
+                exit()
 
     def _commandcall(self, command):
         """No comment"""

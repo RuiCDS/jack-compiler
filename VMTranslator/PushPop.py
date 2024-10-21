@@ -6,10 +6,6 @@ class PushPop:
     def setFileName(self, fileName):
         self.fileName = fileName
 
-    def commandpushpop(self, command):
-        pass
-
-
     def _commandpushconstant(self, command):
         """No comment"""
         parameter = command['parameter']
