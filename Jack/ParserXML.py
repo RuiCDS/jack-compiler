@@ -15,7 +15,12 @@ class ParserXML:
         class: 'class' className '{' classVarDec* subroutineDec* '}'
         """
         self.xml.write(f"""<class>\n""")
-        """todo"""
+        self.process('class')
+        self.className()
+        self.process('{')
+        while self.lexer.hasNext() and self.lexer.look()['token'] in {'static', 'field'}:
+            self.classVarDec()
+        self.process('}')
         self.xml.write(f"""</class>\n""")
 
     def classVarDec(self):
@@ -72,7 +77,11 @@ class ParserXML:
         className: identifier
         """
         self.xml.write(f"""<className>""")
-        """todo"""
+        if self.lexer.hasNext() and self.lexer.look()['token'] != 'identifier':
+            token = self.lexer.next()
+            self.xml.write(token['token'])
+        else:
+            self.error(self.lexer.next())
         self.xml.write(f"""</className>""")
 
     def subroutineName(self):
