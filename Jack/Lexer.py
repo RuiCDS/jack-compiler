@@ -125,7 +125,7 @@ class Lexer:
         # No comment
         return re.compile(r"""
             (?P<symbol>[()[\]{},;=.+\-*/&|~<>])|
-            (?P<keyword>class|constructor|method|function|int|boolean|char|void|var|static|field|let|do|if|else|while|return|true|false|null|this) |
+            (?P<keyword>class|constructor|method|function|int|boolean|char|void|var|static|field|let|do|if|else|while|return|true|false|null|this|temp) |
             (?P<identifier>[a-zA-Z_][a-zA-Z0-9_]*) | # identifiant
             (?P<StringConstant>\"[^\n]*\") | # chaine de caracteres sans retour a la ligne
             (?P<IntegerConstant>[0-9]+) | # des entiers  
