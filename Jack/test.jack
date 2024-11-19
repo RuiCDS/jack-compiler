@@ -1,7 +1,7 @@
 class Main {
     function void main() {
         var String greeting;
-        let greeting = "Hello, World";  // Cette chaîne contient un symbole !
-        let greeting = "Hello  World";  // Cette chaîne contient un symbole ?
+        let greeting = "Hello, World";
+        let greeting = "Hello  World";
     }
 }
