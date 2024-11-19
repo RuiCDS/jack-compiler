@@ -49,6 +49,7 @@ class Parser:
         class_varDec.append((statField, var_type, var_name))
 
 
+
         while self.lexer.look()['token'] == ',':
             self.process(',')
             var_name = self.varName()
@@ -66,7 +67,7 @@ class Parser:
         """
 
         if self.lexer.hasNext() and self.lexer.look()['token'] in {'int','char','boolean','className'}:
-            self.lexer.next()
+            return self.lexer.next()
         else:
             self.error(self.lexer.next())
 
@@ -132,7 +133,9 @@ class Parser:
 
 
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'let', 'if', 'while', 'do', 'return'}:
+
             self.statement()
+
 
 
         self.process('}')
@@ -171,8 +174,7 @@ class Parser:
         className: identifier
         """
         if self.lexer.hasNext() and self.lexer.look()['type'] == 'identifier':
-           return self.lexer.next()
-
+           return self.lexer.next()['token']
         else:
             self.error(self.lexer.next())
 
@@ -182,7 +184,7 @@ class Parser:
         subroutineName: identifier
         """
         if self.lexer.look() is not None and self.lexer.look()['type'] == 'identifier':
-            return self.lexer.look()['token']
+            return self.lexer.next()['token']
         else:
             self.error(self.lexer.next())
 
@@ -192,7 +194,8 @@ class Parser:
         """
 
         if self.lexer.look() is not None and self.lexer.look()['type'] == 'identifier':
-            return self.lexer.look()['token']
+
+            return self.lexer.next()['token']
         else:
             self.error(self.lexer.next())
 
@@ -201,19 +204,71 @@ class Parser:
         """
         statements : statements*
         """
+        while self.lexer.hasNext() and self.lexer.look()['token'] in {'let', 'if', 'while', 'do', 'return'}:
+            token = self.lexer.next()['token']
+
+            if token == 'let':
+                self.letStatement()
+            elif token == 'if':
+                self.ifStatement()
+            elif token == 'while':
+                self.whileStatement()
+            elif token == 'do':
+                self.doStatement()
+            elif token == 'return':
+                self.returnStatement()
+            else:
+                self.error(self.lexer.next())
+
 
 
     def statement(self):
         """
         statement : letStatements|ifStatement|whileStatement|doStatement|returnStatement
         """
-        return 'Todo'
+        token = self.lexer.next()['token']
+
+        if token == 'let':
+
+            return self.letStatement()
+        elif token == 'if':
+            return self.ifStatement()
+        elif token == 'while':
+            return self.whileStatement()
+        elif token == 'do':
+            return self.doStatement()
+        elif token == 'return':
+            return self.returnStatement()
+        else:
+            self.error(self.lexer.next())
 
     def letStatement(self):
         """
         letStatement : 'let' varName ('[' expression ']')? '=' expression ';'
         """
-        return 'Todo'
+
+        self.process('let')
+        LetVarName = self.varName()
+
+
+        arrayExpression = None
+        if self.lexer.look()['token'] == '[':
+            self.process('[')
+            arrayExpression = self.expression()
+            self.process(']')
+
+
+        self.process('=')
+        valueExpression = self.expression()
+        self.process(';')
+
+
+        return {
+            'type': 'letStatement',
+            'varName': LetVarName,
+            'arrayExpression': arrayExpression,
+            'valueExpression': valueExpression
+        }
 
     def ifStatement(self):
         """
@@ -243,15 +298,80 @@ class Parser:
         """
         expression : term (op term)*
         """
-        return 'Todo'
+        # Analyse du premier terme de l'expression
+        first_term = self.term()
+        expression_parts = [first_term]  # Stocker l'expression pour la construction
+
+        # Analyser les opérations suivantes et leurs termes
+        while self.lexer.hasNext() and self.lexer.look()['token'] in {'+', '-', '*', '/', '&', '|', '<', '>', '='}:
+            operator = self.lexer.next()['token']  # Récupérer l'opérateur
+            next_term = self.term()  # Analyser le terme suivant
+            expression_parts.append((operator, next_term))  # Ajouter l'opérateur et le terme à l'expression
+
+        # Retourner une structure représentant l'expression
+        return {
+            'type': 'expression',
+            'parts': expression_parts
+        }
 
     def term(self):
         """
-        term : integerConstant|stringConstant|keywordConstant
-                |varName|varName '[' expression ']'|subroutineCall
-                | '(' expression ')' | unaryOp term
+        term : integerConstant | stringConstant | keywordConstant
+               | varName | varName '[' expression ']' | subroutineCall
+               | '(' expression ')' | unaryOp term
         """
-        return 'Todo'
+        token = self.lexer.look()  # Regarder le prochain token
+
+        # Integer constant
+        if token['type'] == 'integerConstant':
+            self.lexer.next()  # Consommer le token
+            return {'type': 'integerConstant', 'value': token['token']}
+
+        # String constant
+        elif token['type'] == 'stringConstant':
+            self.lexer.next()  # Consommer le token
+            return {'type': 'stringConstant', 'value': token['token']}
+
+        # Keyword constant (true, false, null, this)
+        elif token['type'] == 'keyword' and token['token'] in {'true', 'false', 'null', 'this'}:
+            self.lexer.next()  # Consommer le token
+            return {'type': 'keywordConstant', 'value': token['token']}
+
+        # Parenthesized expression: '(' expression ')'
+        elif token['token'] == '(':
+            self.process('(')
+            expression = self.expression()
+            self.process(')')
+            return {'type': 'expression', 'value': expression}
+
+        # Unary operation: unaryOp term
+        elif token['token'] in {'-', '~'}:  # '-' for negation, '~' for bitwise NOT
+            unary_op = self.lexer.next()['token']  # Consommer l'opérateur unaire
+            term = self.term()  # Appeler récursivement term
+            return {'type': 'unaryOp', 'operator': unary_op, 'term': term}
+
+        # Variable name, array access, or subroutine call
+        elif token['type'] == 'identifier':
+            identifier = self.lexer.next()['token']  # Récupérer le nom
+
+            # Array access: varName '[' expression ']'
+            if self.lexer.look()['token'] == '[':
+                self.process('[')
+                expression = self.expression()
+                self.process(']')
+                return {'type': 'arrayAccess', 'varName': identifier, 'index': expression}
+
+            # Subroutine call: subroutineName '(' expressionList ')' or (className | varName) '.' subroutineName '(' expressionList ')'
+            elif self.lexer.look()['token'] in {'(', '.'}:
+                return self.subroutineCall(identifier)
+
+            # Simple variable
+            else:
+                return {'type': 'varName', 'value': identifier}
+
+        # Si aucun des cas ne correspond, lever une erreur
+        else:
+            self.error(token)
 
     def subroutineCall(self):
         """
@@ -290,6 +410,15 @@ class Parser:
             return token
         else:
             self.error(token)
+
+    #def process(self, expected_token):
+        #token = self.lexer.next()  # Consomme le prochain token
+        #print(f"Expected: {expected_token}, Got: {token['token']}")  # Affiche ce que tu reçois
+        #if token is not None and token['token'] == expected_token:
+        #    return token
+        #else:
+        #    print(f"Error: Expected {expected_token} but got {token['token']}")
+        #    self.error(token)
 
     def error(self, token):
         if token is None:

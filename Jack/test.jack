@@ -1,6 +1,7 @@
-class Test {
-    function void main() {
-        var int a;
+class Main {
+    field int a;  // Déclaration au niveau de la classe (champ)
 
+    function void main() {
+        let b = 6;  // Déclaration locale à la fonction
     }
 }
