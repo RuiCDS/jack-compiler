@@ -2,6 +2,6 @@ class Main {
     field int a;  // Déclaration au niveau de la classe (champ)
 
     function void main() {
-        let b = 6;  // Déclaration locale à la fonction
+        let b = 6 + 4; // Déclaration locale à la fonction
     }
 }

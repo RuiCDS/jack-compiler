@@ -133,10 +133,7 @@ class Parser:
 
 
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'let', 'if', 'while', 'do', 'return'}:
-
             self.statement()
-
-
 
         self.process('}')
 
@@ -194,7 +191,6 @@ class Parser:
         """
 
         if self.lexer.look() is not None and self.lexer.look()['type'] == 'identifier':
-
             return self.lexer.next()['token']
         else:
             self.error(self.lexer.next())
@@ -205,7 +201,7 @@ class Parser:
         statements : statements*
         """
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'let', 'if', 'while', 'do', 'return'}:
-            token = self.lexer.next()['token']
+            token = self.lexer.look()['token']
 
             if token == 'let':
                 self.letStatement()
@@ -218,7 +214,7 @@ class Parser:
             elif token == 'return':
                 self.returnStatement()
             else:
-                self.error(self.lexer.next())
+                self.error(token)
 
 
 
@@ -226,10 +222,9 @@ class Parser:
         """
         statement : letStatements|ifStatement|whileStatement|doStatement|returnStatement
         """
-        token = self.lexer.next()['token']
+        token = self.lexer.look()['token']
 
         if token == 'let':
-
             return self.letStatement()
         elif token == 'if':
             return self.ifStatement()
@@ -320,22 +315,19 @@ class Parser:
                | varName | varName '[' expression ']' | subroutineCall
                | '(' expression ')' | unaryOp term
         """
-        token = self.lexer.look()  # Regarder le prochain token
+        token = self.lexer.next()  # Regarder le prochain token
 
         # Integer constant
-        if token['type'] == 'integerConstant':
-            self.lexer.next()  # Consommer le token
-            return {'type': 'integerConstant', 'value': token['token']}
+        if token['type'] == 'IntegerConstant':
+            return token['token']
 
         # String constant
         elif token['type'] == 'stringConstant':
-            self.lexer.next()  # Consommer le token
-            return {'type': 'stringConstant', 'value': token['token']}
+           return token['token']
 
         # Keyword constant (true, false, null, this)
         elif token['type'] == 'keyword' and token['token'] in {'true', 'false', 'null', 'this'}:
-            self.lexer.next()  # Consommer le token
-            return {'type': 'keywordConstant', 'value': token['token']}
+            return token['token']
 
         # Parenthesized expression: '(' expression ')'
         elif token['token'] == '(':
@@ -407,6 +399,7 @@ class Parser:
     def process(self, str):
         token = self.lexer.next()
         if (token is not None and token['token'] == str):
+            print(token)
             return token
         else:
             self.error(token)
