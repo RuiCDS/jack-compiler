@@ -46,7 +46,8 @@ class Lexer:
     def _stringConstant(self):
         """Gestion des chaînes de caractères avec caractères spéciaux"""
         res = ""  # Variable pour accumuler les caractères de la chaîne
-        t = self.reader.next()  # Consommer le guillemet d'ouverture
+        t = self.reader.next()
+        t = self.reader.next()# Consommer le guillemet d'ouverture
 
         # Si la chaîne est vide
         if not self.reader.hasNext():
@@ -54,7 +55,8 @@ class Lexer:
 
         while t is not None and t['char'] != '"':  # Tant que ce n'est pas le guillemet de fin
             res += t['char']  # Ajouter le caractère à la chaîne
-            t = self.reader.next()  # Lire le caractère suivant
+            t = self.reader.next() # Lire le caractère suivant
+
 
         if t is None or t['char'] != '"':  # Vérification que nous avons bien rencontré un guillemet de fin
             print("Error: Unmatched quotes in string")

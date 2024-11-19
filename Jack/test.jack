@@ -1,7 +1,6 @@
-class Main {
+class Test {
     function void main() {
-        var String greeting;
-        let greeting = "Hello, World";
-        let greeting = "Hello  World";
+        var int a;
+
     }
 }
