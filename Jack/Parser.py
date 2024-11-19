@@ -269,7 +269,33 @@ class Parser:
         """
         ifStatement : 'if' '(' expression ')' '{' statements '}' ('else' '{' statements '}')?
         """
-        return 'Todo'
+        self.process('if')
+        self.process('(')
+
+        exp = self.expression()
+
+        self.process(')')
+        self.process('{')
+
+        if_statements = self.statements()
+
+        self.process('}')
+
+        else_statements = None
+        if self.lexer.look()['token'] == 'else':
+            self.process('else')
+            self.process('{')
+            else_statements = self.statements()
+            self.process('}')
+
+        return {
+            'type': 'ifStatement',
+            'condtion': exp,
+            'if_statements': if_statements,
+            'else_statements': else_statements
+
+        }
+
 
     def whileStatement(self):
         """
@@ -315,18 +341,21 @@ class Parser:
                | varName | varName '[' expression ']' | subroutineCall
                | '(' expression ')' | unaryOp term
         """
-        token = self.lexer.next()  # Regarder le prochain token
+        token = self.lexer.look()  # Regarder le prochain token
 
         # Integer constant
         if token['type'] == 'IntegerConstant':
+            self.lexer.next()
             return token['token']
 
         # String constant
         elif token['type'] == 'stringConstant':
-           return token['token']
+            self.lexer.next()
+            return token['token']
 
         # Keyword constant (true, false, null, this)
         elif token['type'] == 'keyword' and token['token'] in {'true', 'false', 'null', 'this'}:
+            self.lexer.next()
             return token['token']
 
         # Parenthesized expression: '(' expression ')'
