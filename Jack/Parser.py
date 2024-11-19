@@ -105,20 +105,27 @@ class Parser:
         """
         parameterList: ((type varName) (',' type varName)*)?
         """
+
         parameterList = []
         while self.lexer.hasNext() and self.lexer.look()['token'] and self.lexer.look()['token'] != ')':
-            if self.lexer.look()['type'] in {'void','char','int','boolean'}:
+
+            if self.lexer.look()['token'] in {'void','char','int','boolean'}:
                 ParamType = self.lexer.next()['token']
                 ParamName = self.lexer.next()['token']
 
-                parameterList.append((ParamType,ParamName))
 
-            if self.lexer.look()['token'] != ',':
-                self.error(self.lexer.next())
-            else:
+                parameterList.append((ParamType,ParamName))
+                print(parameterList)
+
+            if self.lexer.look()['token'] == ',':
                 self.process(',')
 
+
+            elif self.lexer.look()['token'] != ')':
+                self.error(self.lexer.look())
+
         return parameterList
+
 
     def subroutineBody(self):
         """
@@ -325,11 +332,12 @@ class Parser:
 
         # Analyser les opérations suivantes et leurs termes
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'+', '-', '*', '/', '&', '|', '<', '>', '='}:
-            operator = self.lexer.next()['token']  # Récupérer l'opérateur
+            operator = self.op()  # Récupérer l'opérateur
             next_term = self.term()  # Analyser le terme suivant
-            expression_parts.append((operator, next_term))  # Ajouter l'opérateur et le terme à l'expression
+            expression_parts.append((operator['token'], next_term))  # Ajouter l'opérateur et le terme à l'expression
 
         # Retourner une structure représentant l'expression
+        print(expression_parts)
         return {
             'type': 'expression',
             'parts': expression_parts
@@ -384,7 +392,7 @@ class Parser:
 
             # Subroutine call: subroutineName '(' expressionList ')' or (className | varName) '.' subroutineName '(' expressionList ')'
             elif self.lexer.look()['token'] in {'(', '.'}:
-                return self.subroutineCall(identifier)
+                return self.subroutineCall()
 
             # Simple variable
             else:
@@ -397,33 +405,61 @@ class Parser:
     def subroutineCall(self):
         """
         subroutineCall : subroutineName '(' expressionList ')'
-                | (className|varName) '.' subroutineName '(' expressionList ')'
-        Attention : l'analyse syntaxique ne peut pas distingué className et varName.
-            Nous utiliserons la balise <classvarName> pour (className|varName)
+                        | (className|varName) '.' subroutineName '(' expressionList ')'
+        Attention : l'analyse syntaxique ne peut pas distinguer className et varName.
+                    Nous utiliserons la balise <classvarName> pour (className|varName)
         """
-        return 'Todo'
+
 
     def expressionList(self):
         """
         expressionList : (expression (',' expression)*)?
         """
-        return 'Todo'
+
 
     def op(self):
         """
-        op : '+'|'-'|'*'|'/'|'&'|'|'|'<'|'>'|'='
+        op : '+' | '-' | '*' | '/' | '&' | '|' | '<' | '>' | '='
         """
+        valid_ops = {'+', '-', '*', '/', '&', '|', '<', '>', '='}
+        token = self.lexer.look()
+
+        # Vérifie si le token est un opérateur valide
+        if token['token'] in valid_ops:
+            return self.lexer.next()  # Consomme et retourne l'opérateur
+        else:
+            self.error(token)  # Lève une erreur si le token n'est pas un opérateur
 
     def unaryOp(self):
         """
         unaryop : '-'|'~'
         """
-        return 'Todo'
+        op = self.lexer.look()['token']
+        if op in {'-', '~'}:
+            return self.lexer.next()['token']  # Consomme et retourne l'opérateur
+        else:
+            self.error(f"Expected unary operator, found {op}")
 
     def KeywordConstant(self):
         """
         KeyWordConstant : 'true'|'false'|'null'|'this'
         """
+        token = self.lexer.look()['token']
+
+        if token == 'true':
+            self.lexer.next()
+            return True
+        elif token == 'false':
+            self.lexer.next()
+            return False
+        elif token == 'null':
+            self.lexer.next()
+            return None  #
+        elif token == 'this':
+            self.lexer.next()
+            return 'this'
+        else:
+            self.error(f"Expected keyword constant, found {token}")
 
     def process(self, str):
         token = self.lexer.next()

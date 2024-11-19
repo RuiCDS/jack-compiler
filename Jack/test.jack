@@ -1,17 +1,6 @@
 class Main {
-    field int a;  // Déclaration au niveau de la classe (champ)
-
-    function void main() {
-        let c = 4;
-        let b = 4;
-        if (c = b){
-            if ( c < b ){
-                let i = 2;
-            }
-
-        }else{
-            let p = 8;
-        }
-
-    }
+    function void myFunction(int a,char e) {
+     }
 }
+
+
