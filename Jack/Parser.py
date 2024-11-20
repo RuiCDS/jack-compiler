@@ -13,17 +13,28 @@ class Parser:
         """
         class: 'class' className '{' classVarDec* subroutineDec* '}'
         """
-
         self.process('class')
-        self.className()
+        class_name = self.className()  # Nom de la classe
         self.process('{')
 
+        class_vars = []
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'static', 'field'}:
-            self.classVarDec()
+            class_vars.append(self.classVarDec())
 
-        while self.lexer.hasNext() and self.lexer.look()['token'] in {'constructor','function','method'}:
-            self.subroutineDec()
+        subroutines = []
+        while self.lexer.hasNext() and self.lexer.look()['token'] in {'constructor', 'function', 'method'}:
+            subroutines.append(self.subroutineDec())
+
         self.process('}')
+
+        # Retourne une structure correcte
+        print(class_name, class_vars, subroutines)
+        return {
+            'type': 'class',
+            'name': class_name,
+            'class_vars': class_vars,
+            'subroutines': subroutines
+        }
 
     def classVarDec(self):
         """
@@ -114,18 +125,25 @@ class Parser:
         subroutineBody: '{' varDec* statements '}'
         """
 
-        self.process('{')
+        self.process('{')  # Traiter le caractère '{'
 
-
+        # Analyser les déclarations de variables locales
+        local_vars = []
         while self.lexer.hasNext() and self.lexer.look()['token'] == 'var':
-            self.varDec()
+            local_vars.append(self.varDec())  # Appel à varDec pour analyser les variables locales
 
-
+        # Analyser les instructions dans le corps de la sous-routine
+        statements = []
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'let', 'if', 'while', 'do', 'return'}:
-            self.statement()
+            statements.append(self.statement())  # Appel à statement pour analyser chaque instruction
 
+        self.process('}')  # Traiter le caractère '}'
 
-        self.process('}')
+        # Retourner les informations du corps de la sous-routine
+        return {
+            'local_vars': local_vars,  # Les variables locales
+            'statements': statements  # Les instructions
+        }
 
     def varDec(self):
         """
@@ -282,12 +300,24 @@ class Parser:
 
         }
 
-
     def whileStatement(self):
         """
         whileStatement : 'while' '(' expression ')' '{' statements '}'
         """
-        return 'Todo'
+        self.process('while')
+        self.process('(')
+        condition = self.expression()
+        self.process(')')
+        self.process('{')
+        while_statements = self.statements()
+        self.process('}')
+
+        return {
+            'type': 'whileStatement',
+            'condtion': condition,
+            'statements': while_statements
+
+        }
 
     def doStatement(self):
         """

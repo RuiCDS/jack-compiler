@@ -1,19 +1,9 @@
 class Main {
-    field int r;
+    field int e;
 
-    function int main(int a, char h){
-      var int e;
-        if (1 = 1){
-            if (2 = 2){
-                let e = 2;
-            }
-
-        }else{
-            let a = 9;
-        }
+    function void main(int a){
 
     }
-
 }
 
 
