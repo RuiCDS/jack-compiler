@@ -13,6 +13,7 @@ class Parser:
         """
         class: 'class' className '{' classVarDec* subroutineDec* '}'
         """
+
         self.process('class')
         self.className()
         self.process('{')
@@ -28,11 +29,8 @@ class Parser:
         """
         classVarDec: ('static' | 'field') type varName (',' varName)* ';'
         """
-        class_varDec = []
-
-
         if self.lexer.look()['token'] in {'static', 'field'}:
-            statField = self.lexer.next()['token']
+            kind = self.lexer.next()['token']
         else:
             self.error(self.lexer.next())
 
@@ -42,24 +40,21 @@ class Parser:
         else:
             self.error(self.lexer.next())
 
+        var_names = [self.varName()]  # Liste de noms de variables
 
-        var_name = self.varName()
-
-
-        class_varDec.append((statField, var_type, var_name))
-
-
-
+        # Ajouter les noms de variables supplémentaires
         while self.lexer.look()['token'] == ',':
             self.process(',')
-            var_name = self.varName()
-            class_varDec.append((statField, var_type, var_name))
-
+            var_names.append(self.varName())
 
         self.process(';')
 
-
-        return class_varDec
+        return {
+            'type': 'classVarDec',
+            'kind': kind,  # 'static' ou 'field'
+            'var_type': var_type,  # Type des variables
+            'var_names': var_names  # Liste des noms
+        }
 
     def type(self):
         """
@@ -71,61 +66,48 @@ class Parser:
         else:
             self.error(self.lexer.next())
 
-
-
     def subroutineDec(self):
         """
         subroutineDec: ('constructor'| 'function'|'method') ('void'|type)
         subroutineName '(' parameterList ')' subroutineBody
         """
-        subRoutineType = self.lexer.look()['token']
-        if subRoutineType not in {'constructor','function','method'}:
-            self.error(self.lexer.next())
-        else:
-            subRoutineType = self.lexer.next()
-
-        subReturnType = self.lexer.look()['token']
-        if subReturnType not in {'void','char','int','boolean'}:
-            self.error(self.lexer.next())
-        else:
-            subReturnType = self.lexer.next()
-
-        subRoutineName = self.lexer.next()['token']
+        subroutine_type = self.lexer.next()['token']  # constructor, function ou method
+        return_type = self.lexer.next()['token']  # void ou type
+        name = self.lexer.next()['token']  # Nom de la sous-routine
 
         self.process('(')
-        parametre = self.parameterList()
+        parameters = self.parameterList()  # Liste des paramètres
         self.process(')')
-        subRtBody = self.subroutineBody()
+        body = self.subroutineBody()  # Corps de la sous-routine
 
-        return subRoutineType, subReturnType ,subRoutineName, parametre, subRtBody
-
-
+        return {
+            'type': 'subroutineDec',
+            'subroutine_type': subroutine_type,
+            'return_type': return_type,
+            'name': name,
+            'parameters': parameters,
+            'body': body
+        }
 
     def parameterList(self):
         """
         parameterList: ((type varName) (',' type varName)*)?
         """
+        parameters = []
 
-        parameterList = []
-        while self.lexer.hasNext() and self.lexer.look()['token'] and self.lexer.look()['token'] != ')':
-
-            if self.lexer.look()['token'] in {'void','char','int','boolean'}:
-                ParamType = self.lexer.next()['token']
-                ParamName = self.lexer.next()['token']
-
-
-                parameterList.append((ParamType,ParamName))
-                print(parameterList)
+        while self.lexer.hasNext() and self.lexer.look()['token'] != ')':
+            if self.lexer.look()['token'] in {'void', 'char', 'int', 'boolean'}:
+                param_type = self.lexer.next()['token']
+                param_name = self.varName()
+                parameters.append({'type': param_type, 'name': param_name})
 
             if self.lexer.look()['token'] == ',':
                 self.process(',')
-
-
-            elif self.lexer.look()['token'] != ')':
-                self.error(self.lexer.look())
-
-        return parameterList
-
+        print(parameters)
+        return {
+            'type': 'parameterList',
+            'parameters': parameters
+        }
 
     def subroutineBody(self):
         """
@@ -142,43 +124,42 @@ class Parser:
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'let', 'if', 'while', 'do', 'return'}:
             self.statement()
 
+
         self.process('}')
 
     def varDec(self):
         """
         varDec: 'var' type varName (',' varName)* ';'
         """
-        listVarDec = []
-
         self.process('var')
 
-        typeVar = self.lexer.look()['token']
-        if typeVar not in {'int', 'char', 'boolean'}:
-            self.error(self.lexer.look())
+        if self.lexer.look()['token'] in {'int', 'char', 'boolean'}:
+            var_type = self.lexer.next()['token']
         else:
-            typeVar = self.lexer.next()
+            self.error(self.lexer.next())
 
-        name = self.varName()
+        var_names = [self.varName()]  # Liste des noms de variables
 
-        listVarDec.append((typeVar, name))
-
-        while self.lexer.hasNext() and self.lexer.look()['token'] == ',':
+        # Ajouter les noms de variables supplémentaires
+        while self.lexer.look()['token'] == ',':
             self.process(',')
-
-            name = self.varName()
-
-            listVarDec.append((typeVar, name))
+            var_names.append(self.varName())
 
         self.process(';')
-
-        return listVarDec
+        print(var_type,var_names, ';')
+        return {
+            'type': 'varDec',
+            'var_type': var_type,
+            'var_names': var_names
+        }
 
     def className(self):
         """
         className: identifier
         """
         if self.lexer.hasNext() and self.lexer.look()['type'] == 'identifier':
-           return self.lexer.next()['token']
+            print(self.lexer.look())
+            return self.lexer.next()['token']
         else:
             self.error(self.lexer.next())
 
@@ -188,6 +169,7 @@ class Parser:
         subroutineName: identifier
         """
         if self.lexer.look() is not None and self.lexer.look()['type'] == 'identifier':
+            print(self.lexer.look())
             return self.lexer.next()['token']
         else:
             self.error(self.lexer.next())
@@ -198,6 +180,7 @@ class Parser:
         """
 
         if self.lexer.look() is not None and self.lexer.look()['type'] == 'identifier':
+            print(self.lexer.look())
             return self.lexer.next()['token']
         else:
             self.error(self.lexer.next())
@@ -248,28 +231,24 @@ class Parser:
         """
         letStatement : 'let' varName ('[' expression ']')? '=' expression ';'
         """
-
         self.process('let')
-        LetVarName = self.varName()
+        var_name = self.varName()
 
-
-        arrayExpression = None
+        array_expression = None
         if self.lexer.look()['token'] == '[':
             self.process('[')
-            arrayExpression = self.expression()
+            array_expression = self.expression()
             self.process(']')
 
-
         self.process('=')
-        valueExpression = self.expression()
+        value_expression = self.expression()
         self.process(';')
-
 
         return {
             'type': 'letStatement',
-            'varName': LetVarName,
-            'arrayExpression': arrayExpression,
-            'valueExpression': valueExpression
+            'var_name': var_name,
+            'array_expression': array_expression,
+            'value_expression': value_expression
         }
 
     def ifStatement(self):

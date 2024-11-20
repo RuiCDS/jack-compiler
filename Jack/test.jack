@@ -1,6 +1,19 @@
 class Main {
-    function void myFunction(int a,char e) {
-     }
+    field int r;
+
+    function int main(int a, char h){
+      var int e;
+        if (1 = 1){
+            if (2 = 2){
+                let e = 2;
+            }
+
+        }else{
+            let a = 9;
+        }
+
+    }
+
 }
 
 
