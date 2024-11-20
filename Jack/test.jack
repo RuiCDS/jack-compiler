@@ -1,20 +1,21 @@
-class Main {
-    static int x, y;
-    field boolean flag;
-
-    constructor Main new() {
+class Test {
+    function void main() {
         var int i;
-        let i = 0;
-        return this;
+        let i = 0; // Initialisation
+        return;
     }
 
-    method void testMethod(int arg1, boolean arg2) {
-        var char c;
-        if (arg2) {
-            let x = 10;
-        } else {
-            let y = 20;
-        }
+    function void incrementCounter() {
+        var int counter;
+        let counter = 0; // Initialisation du compteur
+
+
+         let counter = counter + 1; // Incrémentation
+         while (counter < 5){
+            let e = e +1;// Condition de sortie
+         }
+
         return;
     }
 }
+

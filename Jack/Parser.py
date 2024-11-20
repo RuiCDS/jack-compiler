@@ -13,6 +13,7 @@ class Parser:
         """
         class: 'class' className '{' classVarDec* subroutineDec* '}'
         """
+
         self.process('class')
         class_name = self.className()  # Nom de la classe
         self.process('{')
@@ -28,13 +29,13 @@ class Parser:
         self.process('}')
 
         # Retourne une structure correcte
-        print(class_name, class_vars, subroutines)
-        return {
+
+        return [{
             'type': 'class',
             'name': class_name,
             'class_vars': class_vars,
             'subroutines': subroutines
-        }
+        }]
 
     def classVarDec(self):
         """
@@ -327,6 +328,7 @@ class Parser:
         self.process('do')
         subroutine_call = self.subroutineCall()
         self.process(';')
+
 
         return {
             'type': 'doStatement',
