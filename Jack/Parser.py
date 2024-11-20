@@ -19,7 +19,7 @@ class Parser:
 
         class_vars = []
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'static', 'field'}:
-            class_vars.append(self.classVarDec())
+            class_vars += self.classVarDec()
 
         subroutines = []
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'constructor', 'function', 'method'}:
@@ -51,21 +51,27 @@ class Parser:
         else:
             self.error(self.lexer.next())
 
-        var_names = [self.varName()]  # Liste de noms de variables
+        name = self.varName()  # Liste de noms de variables
+
+        res = [{
+            'type': var_type,
+            'kind': kind,  # 'static' ou 'field'
+            'name': name  # Liste des noms
+        }]
+
 
         # Ajouter les noms de variables supplémentaires
         while self.lexer.look()['token'] == ',':
             self.process(',')
-            var_names.append(self.varName())
+            res.append({
+            'type': var_type,
+            'kind': kind,  # 'static' ou 'field'
+            'var_names': self.varName()  # Liste des noms
+        })
 
         self.process(';')
 
-        return {
-            'type': 'classVarDec',
-            'kind': kind,  # 'static' ou 'field'
-            'var_type': var_type,  # Type des variables
-            'var_names': var_names  # Liste des noms
-        }
+        return res
 
     def type(self):
         """
@@ -110,7 +116,7 @@ class Parser:
             if self.lexer.look()['token'] in {'void', 'char', 'int', 'boolean'}:
                 param_type = self.lexer.next()['token']
                 param_name = self.varName()
-                parameters.append({'type': param_type, 'name': param_name})
+                parameters.append({'type': param_type, 'kind': 'argument','name': param_name})
 
             if self.lexer.look()['token'] == ',':
                 self.process(',')
@@ -130,7 +136,7 @@ class Parser:
         # Analyser les déclarations de variables locales
         local_vars = []
         while self.lexer.hasNext() and self.lexer.look()['token'] == 'var':
-            local_vars.append(self.varDec())  # Appel à varDec pour analyser les variables locales
+            local_vars+=self.varDec()  # Appel à varDec pour analyser les variables locales
 
         # Analyser les instructions dans le corps de la sous-routine
         statements = []
@@ -156,20 +162,26 @@ class Parser:
         else:
             self.error(self.lexer.next())
 
-        var_names = [self.varName()]  # Liste des noms de variables
+        name = self.varName() # Liste des noms de variables
+        res = [{
+            'type': var_type,
+            'kind': 'local',
+            'name': name  # Liste des noms
+        }]
 
         # Ajouter les noms de variables supplémentaires
         while self.lexer.look()['token'] == ',':
             self.process(',')
-            var_names.append(self.varName())
+            name = self.varName()  # Liste des noms de variables
+            res.append({
+                'type': var_type,
+                'kind': 'local',
+                'name': name  # Liste des noms
+            })
 
         self.process(';')
-        print(var_type,var_names, ';')
-        return {
-            'type': 'varDec',
-            'var_type': var_type,
-            'var_names': var_names
-        }
+
+        return res
 
     def className(self):
         """
@@ -208,22 +220,10 @@ class Parser:
         """
         statements : statements*
         """
+        statements=[]
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'let', 'if', 'while', 'do', 'return'}:
-            token = self.lexer.look()['token']
-
-            if token == 'let':
-                self.letStatement()
-            elif token == 'if':
-                self.ifStatement()
-            elif token == 'while':
-                self.whileStatement()
-            elif token == 'do':
-                self.doStatement()
-            elif token == 'return':
-                self.returnStatement()
-            else:
-                self.error(token)
-
+            statements.append(self.statement())
+        return statements
 
 
     def statement(self):
@@ -323,13 +323,40 @@ class Parser:
         """
         doStatement : 'do' subroutineCall ';'
         """
-        return 'Todo'
+
+        self.process('do')
+        subroutine_call = self.subroutineCall()
+        self.process(';')
+
+        return {
+            'type': 'doStatement',
+            'subroutineCall': subroutine_call
+        }
 
     def returnStatement(self):
         """
         returnStatement : 'return' expression? ';'
         """
-        return 'Todo'
+        self.process('return')
+
+        if self.lexer.look()['token'] != ';':
+            valeur = self.expression()
+
+        else:
+            valeur = None
+
+        self.process(';')
+
+        if valeur != None:
+            return {
+                'type': 'return',
+                'value': valeur
+            }
+        else:
+            return {
+                'type': 'return'
+            }
+
 
     def expression(self):
         """
@@ -418,12 +445,48 @@ class Parser:
         Attention : l'analyse syntaxique ne peut pas distinguer className et varName.
                     Nous utiliserons la balise <classvarName> pour (className|varName)
         """
+        # Récupérer le premier identifiant
+        identifier = {
+            'type': '<classvarName>',
+            'value': self.lexer.look()
+        }
+
+        # Vérifier s'il s'agit d'un appel direct ou avec préfixe
+        if self.lexer.look()['token'] == '(':
+            # Appel direct de méthode
+            self.process('(')
+            expression_list = self.ExpressionList()
+            self.process(')')
+
+            return {
+                'type': 'directMethodCall',
+                'methodName': identifier,
+                'arguments': expression_list
+            }
+        elif self.lexer.look()['token'] == '.':
+            # Appel de méthode sur un objet ou une classe
+            self.process('(')
+            expression_list = self.ExpressionList()
+            self.process(')')
+
+            return {
+                'type': 'directMethodCall',
+                'methodName': identifier,
+                'arguments': expression_list
+            }
 
 
     def expressionList(self):
         """
         expressionList : (expression (',' expression)*)?
         """
+        expression_list = []
+        if self.lexer.look()['token'] != ')':
+            expression_list.append(self.expression())
+            while self.lexer.look()['token'] != ',':
+                self.process(',')
+                expression_list.append(self.expression())
+        return expression_list
 
 
     def op(self):

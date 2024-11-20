@@ -1,9 +1,20 @@
 class Main {
-    field int e;
+    static int x, y;
+    field boolean flag;
 
-    function void main(int a){
+    constructor Main new() {
+        var int i;
+        let i = 0;
+        return this;
+    }
 
+    method void testMethod(int arg1, boolean arg2) {
+        var char c;
+        if (arg2) {
+            let x = 10;
+        } else {
+            let y = 20;
+        }
+        return;
     }
 }
-
-
