@@ -236,8 +236,6 @@ class TicTacToeGame {
     }
 
 
-    /** Starts the game, and handles inputs from the user that control
-     *  the bat's movement direction. */
     method void run() {
         while (~exit) {
             // waits for a key to be pressed.
@@ -255,12 +253,5 @@ class TicTacToeGame {
 
         return;
     }
-
-    /**
-     * Handles ball movement, including bouncing.
-     * If the ball bounces off a wall, finds its new direction.
-     * If the ball bounces off the bat, increases the score by one
-     * and shrinks the bat's size, to make the game more challenging.
-     */
-
 }
+

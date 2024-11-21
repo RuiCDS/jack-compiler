@@ -135,6 +135,7 @@ class Lexer:
         """Regarde le token suivant sans avancer le lecteur."""
         return self.tokens[1]
 
+
     def _pattern(self):
         """Expression régulière pour identifier les symboles, mots-clés, identifiants, etc."""
         return re.compile(r"""

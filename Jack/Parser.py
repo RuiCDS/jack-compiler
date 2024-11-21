@@ -47,7 +47,12 @@ class Parser:
             self.error(self.lexer.next())
 
         # Vérifier le type de la variable
+
         if self.lexer.look()['token'] in {'int', 'char', 'boolean'}:
+
+            var_type = self.lexer.next()['token']
+
+        elif self.lexer.look()['type'] == 'identifier':
             var_type = self.lexer.next()['token']
         else:
             self.error(self.lexer.next())
@@ -160,6 +165,8 @@ class Parser:
 
         if self.lexer.look()['token'] in {'int', 'char', 'boolean'}:
             var_type = self.lexer.next()['token']
+        elif self.lexer.look()['type'] == 'identifier':
+            var_type = self.lexer.next()['token']
         else:
             self.error(self.lexer.next())
 
@@ -234,7 +241,7 @@ class Parser:
         token = self.lexer.look()['token']
 
         if token == 'let':
-            return self.letStatement()
+            return self.letStatement
         elif token == 'if':
             return self.ifStatement()
         elif token == 'while':
@@ -246,6 +253,7 @@ class Parser:
         else:
             self.error(self.lexer.next())
 
+    @property
     def letStatement(self):
         """
         letStatement : 'let' varName ('[' expression ']')? '=' expression ';'
@@ -259,9 +267,26 @@ class Parser:
             array_expression = self.expression()
             self.process(']')
 
-        self.process('=')
-        value_expression = self.expression()
-        self.process(';')
+
+        if self.lexer.look2()['type'] == 'identifier':
+            self.process('=')
+            if self.lexer.look2()['token'] in {'+', '-', '*', '/', '&', '|', '<', '>', '='}:
+                value_expression = self.expression()
+                self.process(';')
+
+            elif self.lexer.look2()['token'] == ';':
+                value_expression = self.varName()
+                self.process(';')
+
+            else:
+                print("RUII", self.lexer.look())
+                value_expression = self.subroutineCall()
+                self.process(';')
+        else:
+            self.process('=')
+            value_expression = self.expression()
+            self.process(';')
+
 
         return {
             'type': 'letStatement',
@@ -457,6 +482,7 @@ class Parser:
 
         # Récupérer le premier identifiant (le nom de la classe ou méthode)
         identifier = self.lexer.look()
+
         if identifier['type'] != 'identifier':
             raise SyntaxError(f"Expected identifier, found {identifier}")
         self.process(identifier['token'])  # Consommer l'identifiant (en fonction de sa valeur, pas de son type)
