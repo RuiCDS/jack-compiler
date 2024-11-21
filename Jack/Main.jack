@@ -1,0 +1,13 @@
+class Main {
+
+    /** Initializes a Pong game and starts running it. */
+    function void main() {
+
+        var TicTacToeGame game;
+        do TicTacToeGame.newInstance();
+        let game = TicTacToeGame.getInstance();
+        do game.run();
+        do game.dispose();
+        return;
+    }
+}
