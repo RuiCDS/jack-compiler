@@ -1,21 +1,19 @@
 class Test {
     function void main() {
-        var int i;
-        let i = 0; // Initialisation
+        do Test.sayHello();
+        do Test.addNumbers(1, 2, 3);
         return;
     }
 
-    function void incrementCounter() {
-        var int counter;
-        let counter = 0; // Initialisation du compteur
+    function void sayHello() {
+        do Output.printString("Hello, World!");
+        return;
+    }
 
-
-         let counter = counter + 1; // Incrémentation
-         while (counter < 5){
-            let e = e +1;// Condition de sortie
-         }
-
+    function void addNumbers(int a, int b, int c) {
+        var int sum;
+        let sum = a + b + c;
+        do Output.printInt(sum);
         return;
     }
 }
-

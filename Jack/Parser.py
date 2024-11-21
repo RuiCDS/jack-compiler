@@ -121,7 +121,7 @@ class Parser:
 
             if self.lexer.look()['token'] == ',':
                 self.process(',')
-        print(parameters)
+
         return {
             'type': 'parameterList',
             'parameters': parameters
@@ -325,14 +325,19 @@ class Parser:
         doStatement : 'do' subroutineCall ';'
         """
 
-        self.process('do')
-        subroutine_call = self.subroutineCall()
-        self.process(';')
+        self.process('do')  # Consommer 'do'
 
+        subroutine = self.subroutineCall()  # Appeler la sous-routine
+
+
+        # Consommer ';'
+        if self.lexer.look()['token'] != ';':
+            raise SyntaxError(f"Expected ';' after do statement, found {self.lexer.look()}")
+        self.process(';')
 
         return {
             'type': 'doStatement',
-            'subroutineCall': subroutine_call
+            'subroutine': subroutine
         }
 
     def returnStatement(self):
@@ -375,7 +380,7 @@ class Parser:
             expression_parts.append((operator['token'], next_term))  # Ajouter l'opérateur et le terme à l'expression
 
         # Retourner une structure représentant l'expression
-        print(expression_parts)
+
         return {
             'type': 'expression',
             'parts': expression_parts
@@ -392,12 +397,18 @@ class Parser:
         # Integer constant
         if token['type'] == 'IntegerConstant':
             self.lexer.next()
-            return token['token']
+            return {
+                'type': 'integerConstant',
+                'value': token['token']
+            }
 
         # String constant
-        elif token['type'] == 'stringConstant':
+        elif token['type'] == 'StringConstant':
             self.lexer.next()
-            return token['token']
+            return {
+                'type': 'stringConstant',
+                'value': token['token']
+            }
 
         # Keyword constant (true, false, null, this)
         elif token['type'] == 'keyword' and token['token'] in {'true', 'false', 'null', 'this'}:
@@ -440,43 +451,46 @@ class Parser:
         else:
             self.error(token)
 
+
     def subroutineCall(self):
-        """
-        subroutineCall : subroutineName '(' expressionList ')'
-                        | (className|varName) '.' subroutineName '(' expressionList ')'
-        Attention : l'analyse syntaxique ne peut pas distinguer className et varName.
-                    Nous utiliserons la balise <classvarName> pour (className|varName)
-        """
-        # Récupérer le premier identifiant
-        identifier = {
-            'type': '<classvarName>',
-            'value': self.lexer.look()
+
+
+        # Récupérer le premier identifiant (le nom de la classe ou méthode)
+        identifier = self.lexer.look()
+        if identifier['type'] != 'identifier':
+            raise SyntaxError(f"Expected identifier, found {identifier}")
+        self.process(identifier['token'])  # Consommer l'identifiant (en fonction de sa valeur, pas de son type)
+
+        # Vérifier le type d'appel (direct ou qualifié par un objet/une classe)
+        if self.lexer.look()['token'] == '.':
+            self.process('.')  # Consommer le symbole '.'
+            subroutine_name = self.lexer.look()
+            if subroutine_name['type'] != 'identifier':
+                raise SyntaxError(f"Expected subroutine name after '.', found {subroutine_name}")
+            self.process(subroutine_name['token'])  # Consommer le nom de la sous-routine
+        else:
+            subroutine_name = identifier
+
+        # Vérifier l'ouverture de parenthèse
+        if self.lexer.look()['token'] != '(':
+            raise SyntaxError(f"Expected '(', found {self.lexer.look()}")
+        self.process('(')  # Consommer '('
+
+        # Récupérer la liste des expressions (arguments)
+        expression_list = self.expressionList()
+
+        # Vérifier la fermeture de parenthèse
+        if self.lexer.look()['token'] != ')':
+            raise SyntaxError(f"Expected ')', found {self.lexer.look()}")
+        self.process(')')  # Consommer ')'
+
+        # Retourner les informations de l'appel
+        return {
+            'type': 'subroutineCall',
+            'classOrVar': identifier['token'],
+            'subroutineName': subroutine_name['token'],
+            'arguments': expression_list
         }
-
-        # Vérifier s'il s'agit d'un appel direct ou avec préfixe
-        if self.lexer.look()['token'] == '(':
-            # Appel direct de méthode
-            self.process('(')
-            expression_list = self.ExpressionList()
-            self.process(')')
-
-            return {
-                'type': 'directMethodCall',
-                'methodName': identifier,
-                'arguments': expression_list
-            }
-        elif self.lexer.look()['token'] == '.':
-            # Appel de méthode sur un objet ou une classe
-            self.process('(')
-            expression_list = self.ExpressionList()
-            self.process(')')
-
-            return {
-                'type': 'directMethodCall',
-                'methodName': identifier,
-                'arguments': expression_list
-            }
-
 
     def expressionList(self):
         """
@@ -485,7 +499,7 @@ class Parser:
         expression_list = []
         if self.lexer.look()['token'] != ')':
             expression_list.append(self.expression())
-            while self.lexer.look()['token'] != ',':
+            while self.lexer.look()['token'] == ',':
                 self.process(',')
                 expression_list.append(self.expression())
         return expression_list
