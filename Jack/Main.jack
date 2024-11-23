@@ -1,13 +1,43 @@
 class Main {
-
-
     function void main() {
+        var int numberToGuess;
+        var int playerGuess;
+        var boolean correct;
+        var int attempts;
 
-        var TicTacToeGame game;
-        do TicTacToeGame.newInstance();
-        let game = TicTacToeGame.getInstance();
-        do game.run();
-        do game.dispose();
+        let correct = false;
+        let attempts = 0;
+
+        do Output.printString("Joueur 1, entrez un nombre entre 1 et 100 : ");
+        let numberToGuess = Keyboard.readInt("");
+
+        while (numberToGuess < 1 | numberToGuess > 100) {
+            do Output.printString("Le nombre doit être entre 1 et 100. Réessayez : ");
+            let numberToGuess = Keyboard.readInt("");
+        }
+
+        do Output.printString("Joueur 2, à toi de deviner le nombre !");
+
+        while (~correct) {
+            do Output.printString("Entrez votre supposition : ");
+
+            let playerGuess = Keyboard.readInt("");
+            let attempts = attempts + 1;
+
+            if (playerGuess = numberToGuess) {
+                let correct = true;
+            } else {
+                if (playerGuess < numberToGuess) {
+                    do Output.printString("Trop petit !");
+                } else {
+                    do Output.printString("Trop grand !");
+                }
+            }
+        }
+
+        do Output.printString("Bravo ! Vous avez deviné le nombre en ");
+        do Output.printInt(attempts);
+        do Output.printString(" tentative(s) !\");
         return;
     }
 }
