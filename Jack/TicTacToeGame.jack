@@ -1,20 +1,257 @@
-class Main {
-    function void main() {
-        var Array myArray;
-        var int result;
-        var int currentPlayer;
+class TicTacToeGame {
 
-        // Initialisation du tableau
-        let myArray = Array.new(10);
+    static TicTacToeGame instance;
+    field Array row1;
+    field Array row2;
+    field Array row3;
 
-        // Affectation d'une valeur au tableau
-        let myArray[5] = 42;
+    field boolean gameStarted;
 
-        // Lecture de la valeur du tableau pour l'utiliser dans une expression
-        let result = myArray[5] + currentPlayer;
+    field String p1, p2;
+    field int currentPlayer;
 
-        do Output.printInt(result);
+    field boolean exit;
+    field boolean end;
+
+    constructor TicTacToeGame new() {
+        do Screen.clearScreen();
+        let gameStarted = false;
+        let row1 = Array.new(3);
+        let row2 = Array.new(3);
+        let row3 = Array.new(3);
+
+        do display();
+        do Screen.setColor(true);
+        let p1 = Keyboard.readLine("Nom du Joueur1: ");
+        do Output.moveCursor(0, 0);
+        do Screen.drawRectangle(0, 0, 511, 19);
+        let p2 = Keyboard.readLine("Nom du Joueur2: ");
+
+        let currentPlayer = 1;
+        let gameStarted = true;
+	    let exit = false;
+        let end = false;
+
+        return this;
+    }
+
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+
+    function void newInstance() {
+        let instance = TicTacToeGame.new();
+        return;
+    }
+
+
+    function TicTacToeGame getInstance() {
+        return instance;
+    }
+
+    method void display() {
+        var int i;
+        do Screen.setColor(true);
+        do Screen.drawRectangle(0, 0, 511, 19);
+        do Screen.setColor(true);
+
+
+        do Screen.drawLine(0, 190, 511, 190);
+        do Screen.drawLine(0, 105, 511, 105);
+        do Screen.drawLine(0, 20, 511, 20);
+
+
+        do Screen.drawLine(170, 20, 170, 256);
+        do Screen.drawLine(340, 20, 340, 256);
+        if (gameStarted) {
+            do Screen.setColor(true);
+            let i = 0;
+
+            while (i < 3) {
+                do drawRow1(i);
+                do drawRow2(i);
+                do drawRow3(i);
+                let i = i+1;
+            }
+        }
+
+
+        return;
+    }
+
+    method void drawRow1(int i) {
+
+        if (row1[i] = 0) {
+            do Screen.drawRectangle(80+(170*i), 60, 90 + (170*i), 65);
+            return;
+        }
+        else {
+            do Output.moveCursor(7, 10 + (20*i));
+            do Screen.setColor(false);
+            do Screen.drawRectangle(80+(170*i), 60, 90 + (170*i), 65);
+            do Screen.setColor(true);
+
+            if (row1[i] = 1) {
+                do Output.printString("X");
+            } else {
+                do Output.printString("O");
+            }
+        }
+
+
+        return;
+    }
+
+    method void drawRow2(int i) {
+        if (row2[i] = 0) {
+            do Screen.drawRectangle(80+(170*i), 140, 90 + (170*i), 145);
+            return;
+        }
+        do Output.moveCursor(14, 10 + (20*i));
+        do Screen.setColor(false);
+        do Screen.drawRectangle(80+(170*i), 140, 90 + (170*i), 145);
+        do Screen.setColor(true);
+        if (row1[i] = 1) {
+            do Output.printString("X");
+        } else {
+            do Output.printString("O");
+        }
+
+        return;
+    }
+
+
+    method void drawRow3(int i) {
+        if (row3[i] = 0) {
+            do Screen.drawRectangle(80+(170*i), 220, 90 + (170*i), 225);
+            return;
+        }
+        do Output.moveCursor(16, 10 + (20*i));
+        do Screen.setColor(false);
+        do Screen.drawRectangle(80+(170*i), 220, 90 + (170*i), 225);
+        do Screen.setColor(true);
+        if (row1[i] = 1) {
+            do Output.printString("X");
+        } else {
+            do Output.printString("O");
+        }
+
+        return;
+    }
+
+    method void verifs() {
+        do verifRows();
+        do verifCols();
+        do verifDiags();
+        return;
+    }
+
+    method void verifDiags() {
+        if (row1[0] = currentPlayer & row2[1] = currentPlayer & row3[2] = currentPlayer) {
+            let end = true;
+            return;
+        }
+        if (row3[0] = currentPlayer & row2[1] = currentPlayer & row1[2] = currentPlayer) {
+            let end = true;
+            return;
+        }
+        return;
+    }
+
+    method void verifRows() {
+        if (row1[0] = currentPlayer & row1[1] = currentPlayer & row1[2] = currentPlayer) {
+            let end = true;
+            return;
+        }
+        if (row2[0] = currentPlayer & row2[1] = currentPlayer & row2[2] = currentPlayer) {
+            let end = true;
+            return;
+        }
+        if (row3[0] = currentPlayer & row3[1] = currentPlayer & row3[2] = currentPlayer) {
+            let end = true;
+            return;
+        }
+        return;
+    }
+
+    method void verifCols() {
+        if (row1[0] = currentPlayer & row2[0] = currentPlayer & row3[0] = currentPlayer) {
+            let end = true;
+            return;
+        }
+        if (row1[1] = currentPlayer & row2[1] = currentPlayer & row3[1] = currentPlayer) {
+            let end = true;
+            return;
+        }
+        if (row1[2] = currentPlayer & row2[2] = currentPlayer & row3[2] = currentPlayer) {
+            let end = true;
+            return;
+        }
+        return;
+    }
+
+    method void events() {
+        var int row, col, nameLength;
+        do Output.moveCursor(0, 0);
+        if (currentPlayer = -1) {
+            do Output.printString(p2);
+            let nameLength = p2.length();
+        } else {
+            do Output.printString(p1);
+            let nameLength = p1.length();
+        }
+        do Output.moveCursor(0, nameLength);
+        let row = Keyboard.readInt(", veuillez entrez la colonne: ");
+
+        do Screen.drawRectangle(0, 0, 511, 19);
+
+        do Output.moveCursor(0, nameLength);
+        let col = Keyboard.readInt("Veuillez entrez la ligne: ");
+
+        do Screen.drawRectangle(0, 0, 511, 19);
+
+        if (row = 1) {
+            let row1[col-1] = currentPlayer;
+            return;
+        }
+        if (row = 2) {
+            let row2[col-1] = currentPlayer;
+            return;
+        }
+        if (row = 1) {
+            let row3[col-1] = currentPlayer;
+            return;
+        }
+
+        if (currentPlayer = 1) {
+            let currentPlayer = -1;
+        } else {
+            let currentPlayer = 1;
+        }
+        return;
+
+    }
+
+
+    method void run() {
+        while (~exit) {
+
+            while ((~end) & (~exit)) {
+                do display();
+                do events();
+                do verifs();
+            }
+        }
+
+	    if (exit) {
+            do Output.moveCursor(10,27);
+	        do Output.printString("Game Over");
+	    }
 
         return;
     }
 }
+

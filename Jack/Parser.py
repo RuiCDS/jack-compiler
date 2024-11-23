@@ -263,23 +263,31 @@ class Parser:
 
         array_expression = None
         if self.lexer.look()['token'] == '[':
-            print("RIRIRIRIRI")
             self.process('[')
             array_expression = self.expression()
             self.process(']')
 
 
         if self.lexer.look2()['type'] == 'identifier':
+            print("RIRIRIRIR",self.lexer.look())
             self.process('=')
             if self.lexer.look2()['token'] in {'+', '-', '*', '/', '&', '|', '<', '>', '='}:
                 value_expression = self.expression()
                 self.process(';')
 
             elif self.lexer.look2()['token'] == ';':
-                value_expression = self.varName()
+                value_expression = {
+                    'type': 'varName',
+                    'value': self.varName()
+                }
+                self.process(';')
+
+            elif self.lexer.look2()['token'] == '[':
+                value_expression = self.expression()
                 self.process(';')
 
             else:
+
                 value_expression = self.subroutineCall()
                 self.process(';')
         else:
@@ -404,6 +412,10 @@ class Parser:
             expression_parts.append(operator['token'])  # Ajouter l'opérateur
             expression_parts.append(next_term)  # Ajouter le terme suivant
 
+        # Si l'expression est un seul terme, renvoie-le directement
+        if len(expression_parts) == 1:
+            return expression_parts[0]
+
         # Retourner une structure représentant l'expression
         return {
             'type': 'expression',
@@ -439,7 +451,7 @@ class Parser:
             self.lexer.next()
             return {
                 'type': 'keywordConstant',
-                'value': token['token']  # true, false, null, or this
+                'value': token['token']
             }
 
         # Parenthesized expression: '(' expression ')'
@@ -447,89 +459,88 @@ class Parser:
             self.process('(')
             expression = self.expression()
             self.process(')')
-            return {
-                'type': 'expression',
-                'parts': [expression]  # Uniformise avec `parts`
-            }
+            return {'type': 'expression', 'value': expression}
 
         # Unary operation: unaryOp term
-        elif token['token'] in {'-', '~'}:  # '-' for negation, '~' for bitwise NOT
+        elif token['token'] in {'-', '~'}:
             unary_op = self.lexer.next()['token']  # Consommer l'opérateur unaire
-            term = self.term()  # Appeler récursivement term
-            return {
-                'type': 'unaryOp',
-                'operator': unary_op,
-                'term': term
-            }
+            term = self.term()
+            return {'type': 'unaryOp', 'operator': unary_op, 'term': term}
 
         # Variable name, array access, or subroutine call
         elif token['type'] == 'identifier':
             identifier = self.lexer.next()['token']  # Récupérer le nom
+            if self.lexer.look()['token'] == '.':
+                self.process('.')  # Consomme le '.'
+                field_or_method = self.lexer.next()  # Nom du champ ou de la méthode
+                if self.lexer.look()['token'] == '(':
+                    # C'est un appel de méthode
+                    return self.subroutineCall()
 
-            # Array access: varName '[' expression ']'
-            if self.lexer.look()['token'] == '[':
+            elif self.lexer.look()['token'] == '[':
                 self.process('[')
-                expression = self.expression()
+                index_expression = self.expression()  # Analyse l'index
                 self.process(']')
                 return {
                     'type': 'arrayAccess',
                     'varName': identifier,
-                    'index': expression
+                    'index': index_expression
                 }
 
-            # Subroutine call: subroutineName '(' expressionList ')' or (className | varName) '.' subroutineName '(' expressionList ')'
+            # Subroutine call: subroutineName '(' expressionList ')' or className.varName '(' expressionList ')'
             elif self.lexer.look()['token'] in {'(', '.'}:
                 return self.subroutineCall()
 
             # Simple variable
             else:
-                return {
-                    'type': 'varName',
-                    'value': identifier
-                }
+                return {'type': 'varName', 'value': identifier}
 
         # Si aucun des cas ne correspond, lever une erreur
         else:
             self.error(token)
 
     def subroutineCall(self):
-
-
-        # Récupérer le premier identifiant (le nom de la classe ou méthode)
-        identifier = self.lexer.look()
-
+        """
+        subroutineCall : subroutineName '(' expressionList ')'
+                        | (className|varName) '.' subroutineName '(' expressionList ')'
+        """
+        # Récupérer le premier identifiant (nom de la classe ou variable)
+        identifier = self.lexer.next()  # Consomme le premier token
         if identifier['type'] != 'identifier':
             raise SyntaxError(f"Expected identifier, found {identifier}")
-        self.process(identifier['token'])  # Consommer l'identifiant (en fonction de sa valeur, pas de son type)
 
-        # Vérifier le type d'appel (direct ou qualifié par un objet/une classe)
+        # Vérifier s'il y a un '.' pour un appel qualifié
         if self.lexer.look()['token'] == '.':
-            self.process('.')  # Consommer le symbole '.'
-            subroutine_name = self.lexer.look()
+            self.process('.')  # Consomme le '.'
+            subroutine_name = self.lexer.next()  # Nom de la méthode après le '.'
             if subroutine_name['type'] != 'identifier':
                 raise SyntaxError(f"Expected subroutine name after '.', found {subroutine_name}")
-            self.process(subroutine_name['token'])  # Consommer le nom de la sous-routine
+            class_or_var = identifier['token']
+            method_name = subroutine_name['token']
         else:
-            subroutine_name = identifier
+            # Appel direct
+            class_or_var = None
+            method_name = identifier['token']
 
-        # Vérifier l'ouverture de parenthèse
+        # Vérifier l'ouverture des parenthèses
         if self.lexer.look()['token'] != '(':
             raise SyntaxError(f"Expected '(', found {self.lexer.look()}")
-        self.process('(')  # Consommer '('
+        print(self.lexer.look(),"ICI")
+        self.process('(')
 
-        # Récupérer la liste des expressions (arguments)
+        # Collecter les arguments
         expression_list = self.expressionList()
 
-        # Vérifier la fermeture de parenthèse
+        # Vérifier la fermeture des parenthèses
         if self.lexer.look()['token'] != ')':
+            print(self.lexer.look())
             raise SyntaxError(f"Expected ')', found {self.lexer.look()}")
-        self.process(')')  # Consommer ')'
+        self.process(')')
 
-        # Retourner les informations de l'appel
         return {
             'type': 'subroutineCall',
-            'classOrVar': identifier['token'],
-            'subroutineName': subroutine_name['token'],
+            'classOrVar': class_or_var,
+            'subroutineName': method_name,
             'arguments': expression_list
         }
 
@@ -538,13 +549,18 @@ class Parser:
         expressionList : (expression (',' expression)*)?
         """
         expression_list = []
-        if self.lexer.look()['token'] != ')':
+        print(f"expressionList - Current token: {self.lexer.look()}")
+
+        if self.lexer.look()['token'] != ')':  # Une expression commence si ce n'est pas une parenthèse fermante
             expression_list.append(self.expression())
+            print(f"expressionList - First expression: {expression_list[-1]}")
+
             while self.lexer.look()['token'] == ',':
                 self.process(',')
                 expression_list.append(self.expression())
-        return expression_list
+                print(f"expressionList - Next expression: {expression_list[-1]}")
 
+        return expression_list
 
     def op(self):
         """

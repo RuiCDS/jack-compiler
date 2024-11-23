@@ -92,10 +92,10 @@ class Lexer:
                 return None  # Si t est None, on retourne None
             char = t['char']
             match char:
-                case '/':  # Détection des commentaires
+                case '/*':  # Détection des commentaires
                     if self._comment() is not None:
                         token = "/"
-                case '(' | ')' | '[' | ']' | '{' | '}' | ',' | ';' | '=' | '.' | '+' | '-' | '*' | '&' | '|' | '~' | '<' | '>':
+                case '(' | ')' | '[' | ']' | '{' | '}' | ',' | ';' | '=' | '.' | '+' | '-' | '*' | '&' | '|' | '~' | '<' | '>' | '/' :
                     token = char  # Symbole comme parenthèses, opérateurs, etc.
                     self._skip()
                 case ' ' | '\t' | '\n':  # Ignore les espaces, tabulations, et sauts de ligne
