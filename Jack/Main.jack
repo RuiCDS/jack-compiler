@@ -1,11 +1,20 @@
 class Main {
     function void main() {
+        var Array myArray;
+        var int result;
+        var int currentPlayer;
 
-        var TicTacToeGame game;
-        do TicTacToeGame.newInstance();
-        let game = TicTacToeGame.getInstance();
-        do game.run();
-        do game.dispose();
+        // Initialisation du tableau
+        let myArray = Array.new(10);
+
+        // Affectation d'une valeur au tableau
+        let myArray[5] = 42;
+
+        // Lecture de la valeur du tableau pour l'utiliser dans une expression
+
+
+        do Output.printInt(result);
+
         return;
     }
 }

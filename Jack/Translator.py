@@ -43,7 +43,7 @@ class Translator:
         try:
             # Création d'une instance de Generator pour traiter le fichier
             generator = Generator.Generator(file)
-            generator.jackclass()  # Appelle la méthode principale de traitement
+            generator.jackclass(generator.arbre)  # Appelle la méthode principale de traitement
             print(f"Traduction réussie : {file}")
         except Exception as e:
             print(f"Erreur lors de la traduction du fichier {file} : {e}")

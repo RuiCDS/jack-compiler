@@ -39,43 +39,43 @@ class Parser:
 
     def classVarDec(self):
         """
+        Analyse une déclaration de variable de classe.
         classVarDec: ('static' | 'field') type varName (',' varName)* ';'
         """
         if self.lexer.look()['token'] in {'static', 'field'}:
-            kind = self.lexer.next()['token']
+            kind = self.lexer.next()['token']  # 'static' ou 'field'
         else:
             self.error(self.lexer.next())
 
         # Vérifier le type de la variable
-
         if self.lexer.look()['token'] in {'int', 'char', 'boolean'}:
-
-            var_type = self.lexer.next()['token']
-
+            var_type = self.lexer.next()['token']  # Type standard
         elif self.lexer.look()['type'] == 'identifier':
-            var_type = self.lexer.next()['token']
+            var_type = self.lexer.next()['token']  # Type utilisateur
         else:
             self.error(self.lexer.next())
 
-        name = self.varName()  # Liste de noms de variables
+        # Analyse du premier nom de variable
+        name = self.varName()
 
+        # Stocke la première variable dans la liste des résultats
         res = [{
             'type': var_type,
-            'kind': kind,  # 'static' ou 'field'
-            'name': name  # Liste des noms
+            'kind': kind,
+            'name': name
         }]
 
-
-        # Ajouter les noms de variables supplémentaires
+        # Ajoute les noms de variables supplémentaires
         while self.lexer.look()['token'] == ',':
-            self.process(',')
+            self.process(',')  # Consomme la virgule
+            name = self.varName()  # Analyse le nom de la variable
             res.append({
-            'type': var_type,
-            'kind': kind,  # 'static' ou 'field'
-            'var_names': self.varName()  # Liste des noms
-        })
+                'type': var_type,
+                'kind': kind,
+                'name': name
+            })
 
-        self.process(';')
+        self.process(';')  # Consomme le point-virgule final
 
         return res
 
@@ -263,6 +263,7 @@ class Parser:
 
         array_expression = None
         if self.lexer.look()['token'] == '[':
+            print("RIRIRIRIRI")
             self.process('[')
             array_expression = self.expression()
             self.process(']')
@@ -279,7 +280,6 @@ class Parser:
                 self.process(';')
 
             else:
-                print("RUII", self.lexer.look())
                 value_expression = self.subroutineCall()
                 self.process(';')
         else:
@@ -320,7 +320,7 @@ class Parser:
 
         return {
             'type': 'ifStatement',
-            'condtion': exp,
+            'condition': exp,
             'if_statements': if_statements,
             'else_statements': else_statements
 
@@ -340,7 +340,7 @@ class Parser:
 
         return {
             'type': 'whileStatement',
-            'condtion': condition,
+            'condition': condition,
             'statements': while_statements
 
         }
@@ -389,7 +389,6 @@ class Parser:
                 'type': 'return'
             }
 
-
     def expression(self):
         """
         expression : term (op term)*
@@ -402,10 +401,10 @@ class Parser:
         while self.lexer.hasNext() and self.lexer.look()['token'] in {'+', '-', '*', '/', '&', '|', '<', '>', '='}:
             operator = self.op()  # Récupérer l'opérateur
             next_term = self.term()  # Analyser le terme suivant
-            expression_parts.append((operator['token'], next_term))  # Ajouter l'opérateur et le terme à l'expression
+            expression_parts.append(operator['token'])  # Ajouter l'opérateur
+            expression_parts.append(next_term)  # Ajouter le terme suivant
 
         # Retourner une structure représentant l'expression
-
         return {
             'type': 'expression',
             'parts': expression_parts
@@ -438,20 +437,30 @@ class Parser:
         # Keyword constant (true, false, null, this)
         elif token['type'] == 'keyword' and token['token'] in {'true', 'false', 'null', 'this'}:
             self.lexer.next()
-            return token['token']
+            return {
+                'type': 'keywordConstant',
+                'value': token['token']  # true, false, null, or this
+            }
 
         # Parenthesized expression: '(' expression ')'
         elif token['token'] == '(':
             self.process('(')
             expression = self.expression()
             self.process(')')
-            return {'type': 'expression', 'value': expression}
+            return {
+                'type': 'expression',
+                'parts': [expression]  # Uniformise avec `parts`
+            }
 
         # Unary operation: unaryOp term
         elif token['token'] in {'-', '~'}:  # '-' for negation, '~' for bitwise NOT
             unary_op = self.lexer.next()['token']  # Consommer l'opérateur unaire
             term = self.term()  # Appeler récursivement term
-            return {'type': 'unaryOp', 'operator': unary_op, 'term': term}
+            return {
+                'type': 'unaryOp',
+                'operator': unary_op,
+                'term': term
+            }
 
         # Variable name, array access, or subroutine call
         elif token['type'] == 'identifier':
@@ -462,7 +471,11 @@ class Parser:
                 self.process('[')
                 expression = self.expression()
                 self.process(']')
-                return {'type': 'arrayAccess', 'varName': identifier, 'index': expression}
+                return {
+                    'type': 'arrayAccess',
+                    'varName': identifier,
+                    'index': expression
+                }
 
             # Subroutine call: subroutineName '(' expressionList ')' or (className | varName) '.' subroutineName '(' expressionList ')'
             elif self.lexer.look()['token'] in {'(', '.'}:
@@ -470,12 +483,14 @@ class Parser:
 
             # Simple variable
             else:
-                return {'type': 'varName', 'value': identifier}
+                return {
+                    'type': 'varName',
+                    'value': identifier
+                }
 
         # Si aucun des cas ne correspond, lever une erreur
         else:
             self.error(token)
-
 
     def subroutineCall(self):
 
@@ -607,4 +622,5 @@ if __name__ == "__main__":
     arbre = parser.jackclass()
     todot = todot.Todot(file)
     todot.todot(arbre)
+    print(arbre)
     print('-----fin')
