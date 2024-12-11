@@ -35,19 +35,19 @@ class TicTacToeGame {
         return this;
     }
 
-
+    /** Deallocates the object's memory. */
     method void dispose() {
         do Memory.deAlloc(this);
         return;
     }
 
-
+    /** Creates an instance of a Pong game. */
     function void newInstance() {
         let instance = TicTacToeGame.new();
         return;
     }
 
-
+    /** Returns this TicTacToe game. */
     function TicTacToeGame getInstance() {
         return instance;
     }
@@ -56,14 +56,13 @@ class TicTacToeGame {
         var int i;
         do Screen.setColor(true);
         do Screen.drawRectangle(0, 0, 511, 19);
-        do Screen.setColor(true);
 
-
+        //Lignes
         do Screen.drawLine(0, 190, 511, 190);
         do Screen.drawLine(0, 105, 511, 105);
         do Screen.drawLine(0, 20, 511, 20);
 
-
+        //Colonnes
         do Screen.drawLine(170, 20, 170, 256);
         do Screen.drawLine(340, 20, 340, 256);
         if (gameStarted) {
@@ -89,7 +88,7 @@ class TicTacToeGame {
             return;
         }
         else {
-            do Output.moveCursor(7, 10 + (20*i));
+            do Output.moveCursor(6, 10 + (21*i));
             do Screen.setColor(false);
             do Screen.drawRectangle(80+(170*i), 60, 90 + (170*i), 65);
             do Screen.setColor(true);
@@ -110,11 +109,11 @@ class TicTacToeGame {
             do Screen.drawRectangle(80+(170*i), 140, 90 + (170*i), 145);
             return;
         }
-        do Output.moveCursor(14, 10 + (20*i));
+        do Output.moveCursor(13, 10 + (21*i));
         do Screen.setColor(false);
         do Screen.drawRectangle(80+(170*i), 140, 90 + (170*i), 145);
         do Screen.setColor(true);
-        if (row1[i] = 1) {
+        if (row2[i] = 1) {
             do Output.printString("X");
         } else {
             do Output.printString("O");
@@ -125,22 +124,24 @@ class TicTacToeGame {
 
 
     method void drawRow3(int i) {
-        if (row3[i] = 0) {
-            do Screen.drawRectangle(80+(170*i), 220, 90 + (170*i), 225);
+        if (row3[i] = 0) { // Utilisation de row3
+            do Screen.drawRectangle(80+(170*i), 220, 90 + (170*i), 225); // Coordonnées ajustées pour la troisième ligne
             return;
         }
-        do Output.moveCursor(16, 10 + (20*i));
+        do Output.moveCursor(20, 10 + (21*i)); // Coordonnées du curseur ajustées pour la troisième ligne
         do Screen.setColor(false);
-        do Screen.drawRectangle(80+(170*i), 220, 90 + (170*i), 225);
+        do Screen.drawRectangle(80+(170*i), 220, 90 + (170*i), 225); // Coordonnées ajustées
         do Screen.setColor(true);
-        if (row1[i] = 1) {
+        if (row3[i] = 1) { // Vérification correcte pour la troisième ligne
             do Output.printString("X");
         } else {
             do Output.printString("O");
         }
-
         return;
     }
+
+
+
 
     method void verifs() {
         do verifRows();
@@ -199,31 +200,30 @@ class TicTacToeGame {
         if (currentPlayer = -1) {
             do Output.printString(p2);
             let nameLength = p2.length();
-        } else {
+        }
+        if (currentPlayer = 1) {
             do Output.printString(p1);
             let nameLength = p1.length();
         }
         do Output.moveCursor(0, nameLength);
-        let row = Keyboard.readInt(", veuillez entrez la colonne: ");
+        let row = Keyboard.readInt(", veuillez entrez la ligne: ");
 
         do Screen.drawRectangle(0, 0, 511, 19);
 
         do Output.moveCursor(0, nameLength);
-        let col = Keyboard.readInt("Veuillez entrez la ligne: ");
+        let col = Keyboard.readInt("Veuillez entrez la colonne: ");
+        let col = col-1;
 
         do Screen.drawRectangle(0, 0, 511, 19);
 
         if (row = 1) {
-            let row1[col-1] = currentPlayer;
-            return;
+            let row1[col] = currentPlayer;
         }
         if (row = 2) {
-            let row2[col-1] = currentPlayer;
-            return;
+            let row2[col] = currentPlayer;
         }
-        if (row = 1) {
-            let row3[col-1] = currentPlayer;
-            return;
+        if (row = 3) {
+            let row3[col] = currentPlayer;
         }
 
         if (currentPlayer = 1) {
@@ -238,7 +238,6 @@ class TicTacToeGame {
 
     method void run() {
         while (~exit) {
-
             while ((~end) & (~exit)) {
                 do display();
                 do events();
@@ -253,5 +252,5 @@ class TicTacToeGame {
 
         return;
     }
-}
 
+}
