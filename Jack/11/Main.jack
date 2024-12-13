@@ -1,0 +1,9 @@
+class Main {
+    function void main() {
+        var GridTest game;
+        let game = GridTest.new();
+        do game.run();
+        do game.dispose();
+        return;
+    }
+}

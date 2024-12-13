@@ -1,0 +1,114 @@
+class GridTest {
+    field Array row1, row2, row3;
+    field int row, col;
+
+    constructor GridTest new() {
+        let row1 = Array.new(3);
+        let row2 = Array.new(3);
+        let row3 = Array.new(3);
+      
+        let row1[0] = 0;
+        let row1[1] = 0;
+        let row1[2] = 0;
+        let row2[0] = 0;
+        let row2[1] = 0;
+        let row2[2] = 0;
+        let row3[0] = 0;
+        let row3[1] = 0;
+        let row3[2] = 0;
+
+        do Screen.clearScreen();
+        do drawGrid();
+        do drawSymbols();
+
+        return this;
+    }
+
+    method void drawGrid() {
+        do Screen.setColor(true);
+        do Screen.drawLine(0, 105, 511, 105);
+        do Screen.drawLine(0, 190, 511, 190);
+        do Screen.drawLine(170, 20, 170, 256);
+        do Screen.drawLine(340, 20, 340, 256);
+        return;
+    }
+
+    method void drawSymbols() {
+        do Screen.drawLine(85, 62, 105, 62);     
+        do Screen.drawLine(255, 62, 275, 62);    
+        do Screen.drawLine(425, 62, 445, 62);    
+        do Screen.drawLine(85, 147, 105, 147);
+        do Screen.drawLine(255, 147, 275, 147);  
+        do Screen.drawLine(425, 147, 445, 147);  
+        do Screen.drawLine(85, 223, 105, 223);   
+        do Screen.drawLine(255, 223, 275, 223);  
+        do Screen.drawLine(425, 223, 445, 223);  
+        return;
+    }
+
+    method void drawX(int r, int c) {
+        var int x1, y1;
+        
+        let x1 = 85;
+        let y1 = 62;
+        
+        if (r = 0) { let y1 = 62; }
+        else {
+            if (r = 1) { let y1 = 147; }
+            else {
+                if (r = 2) { let y1 = 223; }
+            }
+        }
+        
+        if (c = 0) { let x1 = 85; }
+        else {
+            if (c = 1) { let x1 = 255; }
+            else {
+                if (c = 2) { let x1 = 425; }
+            }
+        }
+        
+        do Screen.drawLine(x1-10, y1-10, x1+10, y1+10);
+        do Screen.drawLine(x1-10, y1+10, x1+10, y1-10);
+        return;
+    }
+
+    method void getUserInput() {
+        var String message;
+        
+        do Output.moveCursor(0, 0);
+        let message = "Entrez la ligne (0-2): ";
+        do Output.printString(message);
+        let row = Keyboard.readInt(message);
+        
+        do Output.moveCursor(1, 0);
+        let message = "Entrez la colonne (0-2): ";
+        do Output.printString(message);
+        let col = Keyboard.readInt(message);
+        
+        
+        if ((row < 0) | (row > 2) | (col < 0) | (col > 2)) {
+            do Output.moveCursor(2, 0);
+            do Output.printString("Position invalide!");
+            return;
+        }
+        
+        do drawX(row, col);
+        return;
+    }
+
+    method void run() {
+        while (true) {
+            do getUserInput();
+        }
+        return;
+    }
+
+    method void dispose() {
+        do row1.dispose();
+        do row2.dispose();
+        do row3.dispose();
+        do Memory.deAlloc(this);
+        return;
+    }
+}

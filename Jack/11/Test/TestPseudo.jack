@@ -1,0 +1,25 @@
+class TestPseudo {
+    function void main() {
+        var String pseudo1;
+        var String pseudo2;
+
+
+        do Output.printString("Enter pseudo 1: ");
+        let pseudo1 = Keyboard.readLine(String.new(20));
+
+
+        do Output.printString("Enter pseudo 2: ");
+        let pseudo2 = Keyboard.readLine(String.new(20));
+
+
+        do Output.printString("Player 1: ");
+        do Output.printString(pseudo1);
+        do Output.println();
+
+        do Output.printString("Player 2: ");
+        do Output.printString(pseudo2);
+        do Output.println();
+
+        return;
+    }
+}
