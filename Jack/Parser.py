@@ -123,6 +123,15 @@ class Parser:
                 param_type = self.lexer.next()['token']
                 param_name = self.varName()
                 parameters.append({'type': param_type, 'kind': 'argument','name': param_name})
+            else:
+                if self.lexer.look()['type'] != 'identifier':
+                    self.error(self.lexer.next())
+                else:
+                    param_type = self.lexer.next()['token']
+                    param_name = self.varName()
+                    parameters.append({'type': param_type, 'kind': 'argument', 'name': param_name})
+
+
 
             if self.lexer.look()['token'] == ',':
                 self.process(',')

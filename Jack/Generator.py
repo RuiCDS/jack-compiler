@@ -34,7 +34,6 @@ class Generator:
         Gère l'ajout d'une variable dans la table des symboles.
         """
 
-
         # Vérifie que toutes les clés nécessaires sont présentes
         if not all(key in var for key in ('name', 'type', 'kind')):
             self.error(f"Variable mal formée : {var}")
@@ -63,8 +62,6 @@ class Generator:
 
         # Ajout de l'entrée dans la table des symboles
         table.append(entry)
-
-        # Debugging
 
 
     def subroutineDec(self, routine):
@@ -106,6 +103,7 @@ class Generator:
             self.vmfile.write(f"push constant {num_fields}\n")  # Alloue l'espace pour les champs
             self.vmfile.write("call Memory.alloc 1\n")
             self.vmfile.write("pop pointer 0\n")  # Initialise `this`
+            self.vmfile.write("push pointer 0\n")  # Ajouter cette ligne pour retourner this
 
         # Génère les instructions de la sous-routine
         for statement in routine['body']['statements']:
@@ -144,31 +142,6 @@ class Generator:
 
         value_expression = inst['value_expression']
 
-        # Vérifie si c'est une expression simple
-        if value_expression['type'] in {'integerConstant', 'varName', 'keywordConstant', 'stringConstant'}:
-            self.term(value_expression)  # Gère directement les types simples
-
-        # Vérifie si c'est une expression complexe
-        elif value_expression['type'] == 'expression':
-            self.expression(value_expression)  # Gère les expressions complexes
-        elif value_expression['type'] == 'unaryOp':
-            operator = value_expression['operator']
-            term = value_expression['term']
-            self.term(term)  # Gère le terme de l'opération unaire
-            if operator == '-':
-                self.vmfile.write("neg\n")
-            elif operator == '~':
-                self.vmfile.write("not\n")
-            else:
-                self.error(f"Opérateur unaire inconnu : {operator}")
-
-        # Vérifie si c'est un appel de sous-routine
-        elif value_expression['type'] == 'subroutineCall':
-            self.subroutineCall(value_expression)  # Appelle la méthode subroutineCall pour gérer l'appel
-
-        else:
-            self.error(f"Type d'expression inconnu dans letStatement : {value_expression}")
-
         # Vérifie si c'est une affectation à un tableau
         if inst['array_expression']:
             # Gestion des tableaux : arr[i] = value
@@ -190,15 +163,27 @@ class Generator:
             self.expression(array_expression)  # Calcul de l'indice (i)
             self.vmfile.write("add\n")  # Adresse finale : base + i
 
-            # Évaluation de la valeur à assigner
-            self.expression(value_expression)
+            # CORRECTION ICI : On évalue value_expression une seule fois
+            if value_expression['type'] in {'integerConstant', 'varName', 'keywordConstant', 'stringConstant'}:
+                self.term(value_expression)
+            elif value_expression['type'] == 'expression':
+                self.expression(value_expression)
+            elif value_expression['type'] == 'unaryOp':
+                operator = value_expression['operator']
+                term = value_expression['term']
+                self.term(term)
+                if operator == '-':
+                    self.vmfile.write("neg\n")
+                elif operator == '~':
+                    self.vmfile.write("not\n")
+            elif value_expression['type'] == 'subroutineCall':
+                self.subroutineCall(value_expression)
 
             # Stocker la valeur dans `that`
-            self.vmfile.write("pop temp 0\n")  # Stocker temporairement la valeur
-            self.vmfile.write("pop pointer 1\n")  # Référencer `that` à l'adresse calculée
-            self.vmfile.write("push temp 0\n")  # Récupérer la valeur temporaire
-            self.vmfile.write("pop that 0\n")  # Affecter la valeur à l'élément
-
+            self.vmfile.write("pop temp 0\n")
+            self.vmfile.write("pop pointer 1\n")
+            self.vmfile.write("push temp 0\n")
+            self.vmfile.write("pop that 0\n")
 
         else:
             # Affectation normale (pas un tableau)
@@ -207,6 +192,22 @@ class Generator:
                 None)
             if not var_entry:
                 self.error(f"Variable {inst['var_name']} non trouvée.")
+
+            # ��value value_expression une seule fois
+            if value_expression['type'] in {'integerConstant', 'varName', 'keywordConstant', 'stringConstant'}:
+                self.term(value_expression)
+            elif value_expression['type'] == 'expression':
+                self.expression(value_expression)
+            elif value_expression['type'] == 'unaryOp':
+                operator = value_expression['operator']
+                term = value_expression['term']
+                self.term(term)
+                if operator == '-':
+                    self.vmfile.write("neg\n")
+                elif operator == '~':
+                    self.vmfile.write("not\n")
+            elif value_expression['type'] == 'subroutineCall':
+                self.subroutineCall(value_expression)
 
             # Génère l'instruction pop pour stocker la valeur
             segment = {
@@ -257,12 +258,12 @@ class Generator:
         self.vmfile.write(f"label {label_start}\n")
 
         # Générer le code pour la condition
-        self.expression(inst['condition'])  # Utilise la clé 'condition'
-        self.vmfile.write(f"not\n")  # Négatif de la condition
+        self.expression(inst['condition'])
+        self.vmfile.write("not\n")  # Négatif de la condition
         self.vmfile.write(f"if-goto {label_end}\n")  # Sauter si la condition est fausse
 
         # Générer le code pour les instructions du bloc while
-        for statement in inst['statements']:  # Utilise la clé 'statements'
+        for statement in inst['statements']:
             self.statement(statement)
 
         # Boucler au début
@@ -300,7 +301,10 @@ class Generator:
         while 'value' in exp and exp['type'] == 'expression':
             exp = exp['value']  # Décapsule l'expression
 
-
+        if isinstance(exp, dict):
+            if exp['type'] == 'arrayAccess':
+                self.handleArrayAccess(exp)
+                return
         # Si l'expression est une variable ou une constante
         if exp['type'] in {'varName', 'integerConstant', 'stringConstant', 'keywordConstant'}:
             self.term(exp)  # Traite directement l'expression comme un terme
@@ -324,16 +328,15 @@ class Generator:
         # Si l'expression contient des parties (parts)
         if 'parts' in exp:
             parts = exp['parts']
-            # Génère le code pour le premier terme
             self.term(parts[0])
 
-            # Traite les opérateurs et les termes suivants
-            for i in range(1, len(parts), 2):  # Les opérateurs sont aux indices impairs
+            for i in range(1, len(parts), 2):
                 operator = parts[i]
                 next_term = parts[i + 1]
+
+                # Traitement normal pour tous les opérateurs
                 self.term(next_term)
 
-                # Génère le code VM pour l'opérateur
                 if operator == '+':
                     self.vmfile.write("add\n")
                 elif operator == '-':
@@ -341,7 +344,7 @@ class Generator:
                 elif operator == '*':
                     self.vmfile.write("call Math.multiply 2\n")
                 elif operator == '/':
-                    self.vmfile.write("call Math.divide 2\n")
+                    self.vmfile.write("call Math.divide 2\n")  # Plus de manipulation spéciale
                 elif operator == '&':
                     self.vmfile.write("and\n")
                 elif operator == '|':
@@ -365,8 +368,8 @@ class Generator:
             if t['type'] == 'keywordConstant':
                 # Traitement des constantes mot-clés
                 if t['value'] == 'true':
-                    self.vmfile.write("push constant 0\n")
-                    self.vmfile.write("not\n")  # true est représenté par ~0
+                    self.vmfile.write("push constant 1\n")
+                    self.vmfile.write("neg\n")  # true est représenté par -1
                 elif t['value'] in {'false', 'null'}:
                     self.vmfile.write("push constant 0\n")  # false et null sont identiques
                 elif t['value'] == 'this':
@@ -374,7 +377,7 @@ class Generator:
             elif t['type'] == 'integerConstant':
                 self.vmfile.write(f"push constant {t['value']}\n")
             elif t['type'] == 'stringConstant':
-                self.handleStringConstant(t['value'])
+                self.handleStringConstant(t['value'][1:-1])  # Enlève les guillemets
             elif t['type'] == 'varName':
                 var_entry = next(
                     (v for v in self.symbolRoutineTable + self.symbolClassTable if v['name'] == t['value']), None)
