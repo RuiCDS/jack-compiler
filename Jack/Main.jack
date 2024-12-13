@@ -1,8 +1,8 @@
 class Main {
     function void main() {
-        var TicTacToegame;
-        do TicTacToe.newInstance();
-        let game = TicTacToe.getInstance();
+        var TicTacToeGame game;
+        do TicTacToeGame.newInstance();
+        let game = TicTacToeGame.getInstance();
         do game.run();
         do game.dispose();
         return;

@@ -1,13 +1,13 @@
 function Main.main 1
-call TicTacToe.newInstance 0
+call TicTacToeGame.newInstance 0
 pop temp 0
-call TicTacToe.getInstance 0
+call TicTacToeGame.getInstance 0
 pop local 0
 push local 0
-call TicTacToe.run 1
+call TicTacToeGame.run 1
 pop temp 0
 push local 0
-call TicTacToe.dispose 1
+call TicTacToeGame.dispose 1
 pop temp 0
 push constant 0
 return
