@@ -68,9 +68,9 @@ class TicTacToeGame {
 
         let i = 0;
         while (i < 3) {
-            do drawRow(row1, 0, i);
-            do drawRow(row2, 1, i);
-            do drawRow(row3, 2, i);
+            do drawRow(0, i);
+            do drawRow(1, i);
+            do drawRow(2, i);
             let i = i + 1;
         }
 
@@ -92,15 +92,31 @@ class TicTacToeGame {
         return;
     }
 
-    method void drawRow(Array row, int rowIndex, int colIndex) {
+    method void drawRow(int rowIndex, int colIndex) {
         var int x, y;
         let x = 85 + ((2*colIndex) * 85);
         let y = 42 + ((2*rowIndex) * 42);
 
-        if (row[colIndex] = 1) {
+        if (row1[colIndex] = 1) {
             do Screen.drawCircle(x, y, 20);
         } else {
-            if (row[colIndex] = -1) {
+            if (row1[colIndex] = -1) {
+                do Screen.drawRectangle(x - 20, y - 20, x + 20, y + 20);
+            }
+        }
+
+        if (row2[colIndex] = 1) {
+            do Screen.drawCircle(x, y, 20);
+        } else {
+            if (row2[colIndex] = -1) {
+                do Screen.drawRectangle(x - 20, y - 20, x + 20, y + 20);
+            }
+        }
+
+        if (row3[colIndex] = 1) {
+            do Screen.drawCircle(x, y, 20);
+        } else {
+            if (row3[colIndex] = -1) {
                 do Screen.drawRectangle(x - 20, y - 20, x + 20, y + 20);
             }
         }
@@ -122,13 +138,15 @@ class TicTacToeGame {
     var int row, col;
 
     do Output.moveCursor(0, 0);
-    let row = Keyboard.readInt("Entrez une ligne (1-3): ") - 1;
+    let row = Keyboard.readInt("Entrez une ligne (1-3): ");
+    let row = row - 1;
 
     do Output.moveCursor(0, 0);
     do Output.printString("                           ");
 
     do Output.moveCursor(0, 0);
-    let col = Keyboard.readInt("Entrez une colonne (1-3): ") - 1;
+    let col = Keyboard.readInt("Entrez une colonne (1-3): ");
+    let col = col - 1;
 
     do Output.moveCursor(0, 0);
     do Output.printString("                           ");
