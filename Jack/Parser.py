@@ -10,9 +10,7 @@ class Parser:
         self.lexer = Lexer.Lexer(file)
 
     def jackclass(self):
-        """
-        class: 'class' className '{' classVarDec* subroutineDec* '}'
-        """
+
 
         self.process('class')
         class_name = self.className()  # Nom de la classe
@@ -36,6 +34,7 @@ class Parser:
             'class_vars': class_vars,
             'subroutines': subroutines
         }]
+
 
     def classVarDec(self):
         """
@@ -278,7 +277,6 @@ class Parser:
 
 
         if self.lexer.look2()['type'] == 'identifier':
-            print("RIRIRIRIR",self.lexer.look())
             self.process('=')
             if self.lexer.look2()['token'] in {'+', '-', '*', '/', '&', '|', '<', '>', '='}:
                 value_expression = self.expression()

@@ -92,6 +92,13 @@ class Lexer:
                 return None  # Si t est None, on retourne None
             char = t['char']
             match char:
+                case '/':  # Détection des commentaires de type //
+                    next_char = self.reader.next()  # Lire le prochain caractère
+                    if next_char is not None and next_char['char'] == '/':
+                        self._comment()  # Appeler la méthode pour ignorer le commentaire
+                        continue  # Recommencer la boucle pour lire le prochain token
+                    else:
+                        token = char  # Si ce n'est pas un commentaire, traiter le '/'
                 case '/*':  # Détection des commentaires
                     if self._comment() is not None:
                         token = "/"

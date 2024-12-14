@@ -177,7 +177,7 @@ class TicTacToeGame {
         return;
     }
 
-        method void verifRows() {
+    method void verifRows() {
         if ((row1[0] = currentPlayer) & (row1[1] = currentPlayer) & (row1[2] = currentPlayer)) {
             let end = true;
         }
@@ -189,6 +189,7 @@ class TicTacToeGame {
         }
         return;
     }
+
 
     method void verifCols() {
         if ((row1[0] = currentPlayer) & (row2[0] = currentPlayer) & (row3[0] = currentPlayer)) {
