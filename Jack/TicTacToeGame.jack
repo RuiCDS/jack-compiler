@@ -2,9 +2,9 @@ class TicTacToeGame {
 
     static TicTacToeGame instance;
     field Array row1, row2, row3;
-    field boolean gameStarted, exit, end, printEnd, firstRound;
-    field String p1, p2;
-    field int currentPlayer;
+    field boolean gameStarted, exit, end, firstRound;
+    field String p1, p2, why;
+    field int currentPlayer, round;
 
     constructor TicTacToeGame new() {
         do Screen.clearScreen();
@@ -18,12 +18,12 @@ class TicTacToeGame {
         let gameStarted = false;
         let exit = false;
         let end = false;
-        let printEnd = true;
 
         let p1 = Keyboard.readLine("Nom du Joueur 1: ");
         let p2 = Keyboard.readLine("Nom du Joueur 2: ");
 
         let currentPlayer = 1;
+        let round = 0;
         let gameStarted = true;
         let firstRound = true;
 
@@ -83,6 +83,9 @@ class TicTacToeGame {
             }
         }
 
+        //do Output.moveCursor(15, 15);
+        //do Output.printString(why);
+
         return;
     }
 
@@ -129,44 +132,45 @@ class TicTacToeGame {
     }
 
     method void events() {
-    var int row, col;
+        var int row, col;
 
-    do Output.moveCursor(0, 0);
-    let row = Keyboard.readInt("Entrez une ligne (1-3): ");
-    let row = row - 1;
+        do Output.moveCursor(0, 0);
+        let row = Keyboard.readInt("Entrez une ligne (1-3): ");
+        let row = row - 1;
 
-    do Output.moveCursor(0, 0);
-    do Output.printString("                           ");
+        do Output.moveCursor(0, 0);
+        do Output.printString("                           ");
 
-    do Output.moveCursor(0, 0);
-    let col = Keyboard.readInt("Entrez une colonne (1-3): ");
-    let col = col - 1;
+        do Output.moveCursor(0, 0);
+        let col = Keyboard.readInt("Entrez une colonne (1-3): ");
+        let col = col - 1;
 
-    do Output.moveCursor(0, 0);
-    do Output.printString("                           ");
-    do Output.moveCursor(0, 15);
-    do Output.printString(currentPlayer);
+        do Output.moveCursor(0, 0);
+        do Output.printString("                           ");
+        do Output.moveCursor(0, 15);
+        do Output.printString(currentPlayer);
 
-    if (row = 0) {
-        if (row1[col] = 0) {
-            let row1[col] = currentPlayer;
-        }
-    } else {
-        if (row = 1) {
-            if (row2[col] = 0) {
-                let row2[col] = currentPlayer;
+        if (row = 0) {
+            if (row1[col] = 0) {
+                let row1[col] = currentPlayer;
             }
         } else {
-            if (row = 2) {
-                if (row3[col] = 0) {
-                    let row3[col] = currentPlayer;
+            if (row = 1) {
+                if (row2[col] = 0) {
+                    let row2[col] = currentPlayer;
+                }
+            } else {
+                if (row = 2) {
+                    if (row3[col] = 0) {
+                        let row3[col] = currentPlayer;
+                    }
                 }
             }
-        }
-    }
 
-    return;
-}
+        }
+        let round = round + 1;
+        return;
+    }
 
 
     method void verifs() {
@@ -179,12 +183,15 @@ class TicTacToeGame {
 
     method void verifRows() {
         if ((row1[0] = currentPlayer) & (row1[1] = currentPlayer) & (row1[2] = currentPlayer)) {
+            let why = "9";
             let end = true;
         }
         if ((row2[0] = currentPlayer) & (row2[1] = currentPlayer) & (row2[2] = currentPlayer)) {
+            let why = "8";
             let end = true;
         }
         if ((row3[0] = currentPlayer) & (row3[1] = currentPlayer) & (row3[2] = currentPlayer)) {
+            let why = "7";
             let end = true;
         }
         return;
@@ -193,12 +200,15 @@ class TicTacToeGame {
 
     method void verifCols() {
         if ((row1[0] = currentPlayer) & (row2[0] = currentPlayer) & (row3[0] = currentPlayer)) {
+            let why = "6";
             let end = true;
         }
         if ((row1[1] = currentPlayer) & (row2[1] = currentPlayer) & (row3[1] = currentPlayer)) {
+            let why = "5";
             let end = true;
         }
         if ((row1[2] = currentPlayer) & (row2[2] = currentPlayer) & (row3[2] = currentPlayer)) {
+            let why = "4";
             let end = true;
         }
         return;
@@ -206,9 +216,11 @@ class TicTacToeGame {
 
     method void verifDiags() {
         if ((row1[0] = currentPlayer) & (row2[1] = currentPlayer) & (row3[2] = currentPlayer)) {
+            let why = "3";
             let end = true;
         }
         if ((row3[0] = currentPlayer) & (row2[1] = currentPlayer) & (row1[2] = currentPlayer)) {
+            let why = "2";
             let end = true;
         }
         return;
@@ -216,15 +228,13 @@ class TicTacToeGame {
 
 
     method void verifDraw() {
-        var int i;
-        let i = 0;
-        while (i < 3) {
-            if (row1[i] = 0 | row2[i] = 0 | row3[i] = 0) {
-                return;
+        if (round = 9) {
+            if (end = false) {
+                let why = "1";
+                let currentPlayer = 0;
+                let end = true;
             }
-            let i = i + 1;
         }
-        let end = true;
         return;
     }
 
@@ -242,14 +252,18 @@ class TicTacToeGame {
             do Output.moveCursor(0, 0);
             do Output.printString("Fin de la partie! ");
             do Output.moveCursor(5, 0);
-            if (currentPlayer = 1) {
-                do Output.printString(p2);
+            if (currentPlayer = 0) {
+                do Output.printString("Aucun gagnant...");
             } else {
-                do Output.printString(p1);
+                if (currentPlayer = 1) {
+                    do Output.printString(p2);
+                } else {
+                    do Output.printString(p1);
+                }
+                do Output.moveCursor(5, 5);
+                do Output.printString(" remporte la partie!");
             }
-            do Output.moveCursor(5, 5);
-            do Output.printString(" remporte la partie!");
-            let printEnd = false;
+
             do Output.moveCursor(10, 0);
             do Keyboard.readLine("Appuyez sur 'Entrer' pour afficher la partie.");
             do display();
