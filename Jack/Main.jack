@@ -1,15 +1,10 @@
 class Main {
-    //field boolean playAgain;
     function void main() {
-        /*
         var TicTacToeGame game;
-        let playAgain = true;
-        while (playAgain) {*/
-            do TicTacToeGame.newInstance();
-            let game = TicTacToeGame.getInstance();
-            do game.run();
-            do game.dispose();
-        //}
+        do TicTacToeGame.newInstance();
+        let game = TicTacToeGame.getInstance();
+        do game.run();
+        do game.dispose();
         return;
     }
 }
