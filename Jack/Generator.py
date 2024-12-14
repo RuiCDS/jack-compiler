@@ -103,7 +103,8 @@ class Generator:
             self.vmfile.write(f"push constant {num_fields}\n")  # Alloue l'espace pour les champs
             self.vmfile.write("call Memory.alloc 1\n")
             self.vmfile.write("pop pointer 0\n")  # Initialise `this`
-            self.vmfile.write("push pointer 0\n")  # Ajouter cette ligne pour retourner this
+            self.vmfile.write("push pointer 0\n")
+
 
         # Génère les instructions de la sous-routine
         for statement in routine['body']['statements']:
@@ -134,8 +135,6 @@ class Generator:
         Génère le code VM pour une instruction let.
         :param inst: Dictionnaire représentant un letStatement.
         """
-        print(f"Traitement de letStatement : {inst}")
-
         # Vérifie si une valeur est assignée
         if 'value_expression' not in inst or inst['value_expression'] is None:
             self.error("value_expression manquant dans letStatement.")
@@ -163,24 +162,11 @@ class Generator:
             self.expression(array_expression)  # Calcul de l'indice (i)
             self.vmfile.write("add\n")  # Adresse finale : base + i
 
-            # CORRECTION ICI : On évalue value_expression une seule fois
-            if value_expression['type'] in {'integerConstant', 'varName', 'keywordConstant', 'stringConstant'}:
-                self.term(value_expression)
-            elif value_expression['type'] == 'expression':
-                self.expression(value_expression)
-            elif value_expression['type'] == 'unaryOp':
-                operator = value_expression['operator']
-                term = value_expression['term']
-                self.term(term)
-                if operator == '-':
-                    self.vmfile.write("neg\n")
-                elif operator == '~':
-                    self.vmfile.write("not\n")
-            elif value_expression['type'] == 'subroutineCall':
-                self.subroutineCall(value_expression)
+            # Évalue `value_expression` et stocke temporairement
+            self.expression(value_expression)
+            self.vmfile.write("pop temp 0\n")  # Stocker la valeur temporairement
 
             # Stocker la valeur dans `that`
-            self.vmfile.write("pop temp 0\n")
             self.vmfile.write("pop pointer 1\n")
             self.vmfile.write("push temp 0\n")
             self.vmfile.write("pop that 0\n")
@@ -193,7 +179,7 @@ class Generator:
             if not var_entry:
                 self.error(f"Variable {inst['var_name']} non trouvée.")
 
-            # ��value value_expression une seule fois
+            # Évalue `value_expression`
             if value_expression['type'] in {'integerConstant', 'varName', 'keywordConstant', 'stringConstant'}:
                 self.term(value_expression)
             elif value_expression['type'] == 'expression':
@@ -206,6 +192,23 @@ class Generator:
                     self.vmfile.write("neg\n")
                 elif operator == '~':
                     self.vmfile.write("not\n")
+            elif value_expression['type'] == 'binaryOp':  # Nouveau cas pour les opérateurs binaires
+                left = value_expression['left']
+                operator = value_expression['operator']
+                right = value_expression['right']
+                self.term(left)
+                self.term(right)
+                self.vmfile.write({
+                                      '+': 'add',
+                                      '-': 'sub',
+                                      '*': 'call Math.multiply 2',
+                                      '/': 'call Math.divide 2',
+                                      '&': 'and',
+                                      '|': 'or',
+                                      '<': 'lt',
+                                      '>': 'gt',
+                                      '=': 'eq',
+                                  }[operator] + "\n")
             elif value_expression['type'] == 'subroutineCall':
                 self.subroutineCall(value_expression)
 
@@ -283,10 +286,10 @@ class Generator:
     def returnStatement(self, inst):
         """
         Génère le code VM pour une instruction return.
-        :param inst: {'type': 'return', 'valeur': dict or None}
+        :param inst: {'type': 'return', 'value': dict or None}
         """
-        if inst.get('valeur'):  # Si une valeur est retournée
-            self.expression(inst['valeur'])
+        if inst.get('value'):  # Utilise 'value' au lieu de 'valeur'
+            self.expression(inst['value'])  # Génère le code pour l'expression de retour
         else:
             self.vmfile.write("push constant 0\n")  # Retourne 0 par défaut (void)
         self.vmfile.write("return\n")
@@ -294,71 +297,76 @@ class Generator:
     def expression(self, exp):
         """
         Génère le code VM pour une expression.
+        :param exp: Dictionnaire représentant l'expression Jack.
         """
-        print(f"Traitement de l'expression : {exp}")
+        # Décapsuler une expression imbriquée directement
+        if 'value' in exp and exp['type'] == 'expression':
+            exp = exp['value']  # Décapsule directement si c'est une expression imbriquée
 
-        # Vérifie si c'est une expression imbriquée et la décapsule
-        while 'value' in exp and exp['type'] == 'expression':
-            exp = exp['value']  # Décapsule l'expression
-
-        if isinstance(exp, dict):
-            if exp['type'] == 'arrayAccess':
-                self.handleArrayAccess(exp)
-                return
-        # Si l'expression est une variable ou une constante
-        if exp['type'] in {'varName', 'integerConstant', 'stringConstant', 'keywordConstant'}:
-            self.term(exp)  # Traite directement l'expression comme un terme
+        # Cas : Accès à un tableau
+        if isinstance(exp, dict) and exp.get('type') == 'arrayAccess':
+            self.handleArrayAccess(exp)
             return
+
+        # Cas : Constantes, variables ou termes simples
+        if exp['type'] in {'varName', 'integerConstant', 'stringConstant', 'keywordConstant'}:
+            self.term(exp)  # Génère directement le code pour le terme
+            return
+
+        # Cas : Opérateurs unaires
         if exp['type'] == 'unaryOp':
             operator = exp['operator']
             term = exp['term']
             self.term(term)  # Génère le code pour le terme
+            # Applique l'opérateur unaire
             if operator == '-':
                 self.vmfile.write("neg\n")
             elif operator == '~':
                 self.vmfile.write("not\n")
             else:
-                self.error(f"Opérateur unaire inconnu : {operator}")
+                raise ValueError(f"Opérateur unaire inconnu : {operator}")
             return
 
+        # Cas : Appel de sous-routine
         if exp['type'] == 'subroutineCall':
-            self.subroutineCall(exp)  # Appelle la méthode pour gérer un appel de sous-routine
+            self.subroutineCall(exp)  # Génère le code pour l'appel de sous-routine
             return
 
-        # Si l'expression contient des parties (parts)
+        # Cas : Expressions complexes avec opérateurs binaires
         if 'parts' in exp:
             parts = exp['parts']
+            if len(parts) % 2 == 0:
+                raise ValueError("Expression mal formée : nombre pair d'éléments dans 'parts'.")
+
+            # Génère le code pour le premier terme
             self.term(parts[0])
 
+            # Traite les paires (opérateur, terme)
             for i in range(1, len(parts), 2):
                 operator = parts[i]
                 next_term = parts[i + 1]
 
-                # Traitement normal pour tous les opérateurs
+                # Génère le code pour le prochain terme
                 self.term(next_term)
 
-                if operator == '+':
-                    self.vmfile.write("add\n")
-                elif operator == '-':
-                    self.vmfile.write("sub\n")
-                elif operator == '*':
-                    self.vmfile.write("call Math.multiply 2\n")
-                elif operator == '/':
-                    self.vmfile.write("call Math.divide 2\n")  # Plus de manipulation spéciale
-                elif operator == '&':
-                    self.vmfile.write("and\n")
-                elif operator == '|':
-                    self.vmfile.write("or\n")
-                elif operator == '<':
-                    self.vmfile.write("lt\n")
-                elif operator == '>':
-                    self.vmfile.write("gt\n")
-                elif operator == '=':
-                    self.vmfile.write("eq\n")
+                # Applique l'opérateur
+                op_map = {
+                    '+': "add\n",
+                    '-': "sub\n",
+                    '*': "call Math.multiply 2\n",
+                    '/': "call Math.divide 2\n",
+                    '&': "and\n",
+                    '|': "or\n",
+                    '<': "lt\n",
+                    '>': "gt\n",
+                    '=': "eq\n"
+                }
+                if operator in op_map:
+                    self.vmfile.write(op_map[operator])
                 else:
-                    self.error(f"Opérateur inconnu : {operator}")
+                    raise ValueError(f"Opérateur inconnu : {operator}")
         else:
-            self.error(f"Expression mal formée : {exp}")
+            raise ValueError(f"Expression mal formée ou inconnue : {exp}")
 
     def term(self, t):
         """
@@ -471,20 +479,31 @@ class Generator:
     def handleStringConstant(self, string):
         """
         Gère les chaînes de caractères en générant le code VM pour créer et initialiser la chaîne.
+        :param string: La chaîne de caractères à traiter (type `str`).
         """
+        # Vérifie que l'entrée est bien une chaîne de caractères
+        if not isinstance(string, str):
+            raise ValueError(f"Invalid string constant: {string}")
+
         # Appelle String.new pour allouer de l'espace pour la chaîne
         self.vmfile.write(f"push constant {len(string)}\n")  # Taille de la chaîne
-        self.vmfile.write("call String.new 1\n")  # Appelle String.new
+        self.vmfile.write("call String.new 1\n")  # Appelle String.new pour créer l'objet chaîne
 
-        # Ajoute chaque caractère à la chaîne
+        # Ajoute chaque caractère à la chaîne, un par un
         for char in string:
-            self.vmfile.write(f"push constant {ord(char)}\n")  # Code ASCII du caractère
-            self.vmfile.write("call String.appendChar 2\n")  # Appelle String.appendChar
+            ascii_value = ord(char)  # Code ASCII du caractère
+            self.vmfile.write(f"push constant {ascii_value}\n")  # Empile le code ASCII
+            self.vmfile.write("call String.appendChar 2\n")  # Ajoute le caractère à la chaîne
 
     def handleArrayAccess(self, t):
         """
         Génère le code VM pour un accès à un tableau.
         :param t: Dictionnaire représentant un accès à un tableau.
+            {
+                'varName': 'nomDuTableau',
+                'index': dict,  # Expression représentant l'indice
+                'isAssignment': bool  # Indique si c'est une affectation (optionnel)
+            }
         """
         var_name = t['varName']
         index_expression = t['index']
@@ -492,9 +511,11 @@ class Generator:
         # Chercher la variable dans les tables de symboles
         var_entry = next((v for v in self.symbolRoutineTable + self.symbolClassTable if v['name'] == var_name), None)
         if not var_entry:
-            self.error(f"Variable {var_name} non trouvée.")
+            raise ValueError(f"Variable {var_name} non trouvée.")
+        if var_entry['type'] != 'Array':
+            raise TypeError(f"Variable {var_name} n'est pas de type Array.")
 
-        # Pousser la base du tableau
+        # Étape 1 : Pousser la base du tableau
         segment = {
             'static': 'static',
             'field': 'this',
@@ -503,17 +524,21 @@ class Generator:
         }[var_entry['kind']]
         self.vmfile.write(f"push {segment} {var_entry['index']}\n")  # Base du tableau
 
-        # Calculer l'adresse : base + index
+        # Étape 2 : Calculer l'adresse (base + index)
         self.expression(index_expression)  # Évaluer l'expression de l'indice
         self.vmfile.write("add\n")  # Adresse finale = base + index
 
-        # Charger ou affecter la valeur
+        # Étape 3 : Charger ou affecter la valeur
         if t.get('isAssignment', False):  # Si c'est une affectation
-            self.vmfile.write("pop pointer 1\n")  # Référencer `that` à l'adresse calculée
-            self.vmfile.write("pop that 0\n")  # Affecter la valeur
+            # Référencer `that` à l'adresse calculée
+            self.vmfile.write("pop pointer 1\n")
+            # Affecter la valeur au tableau
+            self.vmfile.write("pop that 0\n")
         else:  # Sinon, lire la valeur
-            self.vmfile.write("pop pointer 1\n")  # Référencer `that` à l'adresse calculée
-            self.vmfile.write("push that 0\n")  # Charger la valeur
+            # Référencer `that` à l'adresse calculée
+            self.vmfile.write("pop pointer 1\n")
+            # Charger la valeur du tableau
+            self.vmfile.write("push that 0\n")
 
     def error(self, message=''):
         print(f"SyntaxError: {message}")
