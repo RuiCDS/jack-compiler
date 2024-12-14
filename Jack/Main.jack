@@ -1,10 +1,18 @@
 class Main {
     function void main() {
+        var int playAgain;
         var TicTacToeGame game;
-        do TicTacToeGame.newInstance();
-        let game = TicTacToeGame.getInstance();
-        do game.run();
-        do game.dispose();
+
+        let playAgain = 1;
+        while (playAgain = 1) {
+            do TicTacToeGame.newInstance();
+            let game = TicTacToeGame.getInstance();
+            do game.run();
+            do game.dispose();
+            do Output.moveCursor(0, 15);
+            let playAgain = Keyboard.readInt("Entrer 1 pour jouer, 0 sinon: ");
+        }
+        do Screen.clearScreen();
         return;
     }
 }
