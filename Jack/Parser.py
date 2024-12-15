@@ -532,7 +532,7 @@ class Parser:
         # Vérifier l'ouverture des parenthèses
         if self.lexer.look()['token'] != '(':
             raise SyntaxError(f"Expected '(', found {self.lexer.look()}")
-        print(self.lexer.look(),"ICI")
+
         self.process('(')
 
         # Collecter les arguments
@@ -556,16 +556,16 @@ class Parser:
         expressionList : (expression (',' expression)*)?
         """
         expression_list = []
-        print(f"expressionList - Current token: {self.lexer.look()}")
+
 
         if self.lexer.look()['token'] != ')':  # Une expression commence si ce n'est pas une parenthèse fermante
             expression_list.append(self.expression())
-            print(f"expressionList - First expression: {expression_list[-1]}")
+
 
             while self.lexer.look()['token'] == ',':
                 self.process(',')
                 expression_list.append(self.expression())
-                print(f"expressionList - Next expression: {expression_list[-1]}")
+
 
         return expression_list
 
