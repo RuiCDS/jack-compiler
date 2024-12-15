@@ -63,50 +63,57 @@ class Generator:
         # Ajout de l'entrée dans la table des symboles
         table.append(entry)
 
-
     def subroutineDec(self, routine):
         """
         Génère le code VM pour une sous-routine.
         """
+        # Extraire les informations de la routine
         subroutine_name = routine['name']
         subroutine_type = routine['subroutine_type']  # function, method, constructor
         return_type = routine['return_type']
         parameters = routine['parameters']['parameters']
         local_vars = routine['body']['local_vars']
 
-        # Réinitialise la table des symboles pour cette sous-routine
+        # Réinitialiser la table des symboles des sous-routines
         self.symbolRoutineTable = []
 
-        # Ajoute les paramètres à la table des symboles
-        for i, param in enumerate(parameters):
+        # Si c'est une méthode, ajouter 'this' en tant qu'argument implicite
+        if subroutine_type == 'method':
+            self.symbolRoutineTable.append({
+                'name': 'this',  # L'instance courante
+                'type': self.arbre[0]['name'],  # Le nom de la classe courante
+                'kind': 'argument',  # Segment : argument
+                'index': 0  # Premier argument
+            })
+
+        # Ajouter les paramètres à la table des symboles
+        for i, param in enumerate(parameters, start=1 if subroutine_type == 'method' else 0):
             self.symbolRoutineTable.append({
                 'name': param['name'],  # Nom de l'argument
-                'type': param['type'],  # Type (par ex., int)
+                'type': param['type'],  # Type de l'argument
                 'kind': 'argument',  # Segment : argument
                 'index': i  # Index de l'argument
             })
 
-        # Ajoute les variables locales à la table des symboles
+        # Ajouter les variables locales à la table des symboles
         for var in local_vars:
             self.variable(var)
 
-        # Génère l'en-tête de la sous-routine
+        # Générer l'en-tête de la sous-routine
         num_locals = len(local_vars)
         self.vmfile.write(f"function {self.arbre[0]['name']}.{subroutine_name} {num_locals}\n")
 
-        # Instructions spécifiques aux méthodes ou constructeurs
+        # Instructions spécifiques pour les méthodes et constructeurs
         if subroutine_type == 'method':
-            self.vmfile.write("push argument 0\n")  # Référence à l'objet courant
+            self.vmfile.write("push argument 0\n")  # Empile la référence à l'objet courant
             self.vmfile.write("pop pointer 0\n")  # Initialise `this`
         elif subroutine_type == 'constructor':
             num_fields = len([v for v in self.symbolClassTable if v['kind'] == 'field'])
             self.vmfile.write(f"push constant {num_fields}\n")  # Alloue l'espace pour les champs
-            self.vmfile.write("call Memory.alloc 1\n")
+            self.vmfile.write("call Memory.alloc 1\n")  # Appelle Memory.alloc
             self.vmfile.write("pop pointer 0\n")  # Initialise `this`
-            self.vmfile.write("push pointer 0\n")
 
-
-        # Génère les instructions de la sous-routine
+        # Générer le code des instructions de la sous-routine
         for statement in routine['body']['statements']:
             self.statement(statement)
 

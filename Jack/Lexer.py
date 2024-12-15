@@ -98,7 +98,8 @@ class Lexer:
                         self._comment()  # Appeler la méthode pour ignorer le commentaire
                         continue  # Recommencer la boucle pour lire le prochain token
                     else:
-                        token = char  # Si ce n'est pas un commentaire, traiter le '/'
+                        token = char # Si ce n'est pas un commentaire, traiter le '/'
+                        self._skip()
                 case '/*':  # Détection des commentaires
                     if self._comment() is not None:
                         token = "/"
