@@ -96,7 +96,6 @@ class Lexer:
                     next_char = self.reader.look2() # Lire le prochain caractère
                     if next_char is not None and next_char['char'] == '/':
                         self._comment()
-                        print("rui")# Appeler la méthode pour ignorer le commentaire
                         continue  # Recommencer la boucle pour lire le prochain token
                     else:
                         token = char # Si ce n'est pas un commentaire, traiter le '/'
