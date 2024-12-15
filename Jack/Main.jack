@@ -1,18 +1,31 @@
 class Main {
     function void main() {
-        var int playAgain;
-        var TicTacToeGame game;
+        // Déclaration de variables locales
+        var int playAgain;       // Variable pour décider si le joueur souhaite rejouer (1 = oui, 0 = non)
+        var TicTacToeGame game;  // Instance de la classe TicTacToeGame pour gérer le jeu de Morpion
 
+        // Initialisation de playAgain à 1, signifiant que le joueur veut jouer
         let playAgain = 1;
-        while (playAgain = 1) {
-            do TicTacToeGame.newInstance();
-            let game = TicTacToeGame.getInstance();
-            do game.run();
-            do game.dispose();
+
+        // Boucle principale de jeu
+        while (playAgain = 1) {  // Tant que l'utilisateur initie playAgain à 1, une nouvelle partie se lance
+            do TicTacToeGame.newInstance();  // Crée une nouvelle instance de TicTacToeGame
+
+            let game = TicTacToeGame.getInstance();  // Récupère l'instance du jeu en cours
+
+            do game.run();  // Lance le jeu
+
+            do game.dispose();  // Libère les ressources utilisées par le jeu après chaque partie
+
             do Output.moveCursor(0, 15);
+
+            // Demande à l'utilisateur s'il souhaite rejouer
             let playAgain = Keyboard.readInt("Entrer 1 pour jouer, 0 sinon: ");
         }
+
+        // Lorsque le joueur ne souhaite plus jouer, l'écran est nettoyé
         do Screen.clearScreen();
-        return;
+
+        return;  // Arrêt du programme
     }
 }

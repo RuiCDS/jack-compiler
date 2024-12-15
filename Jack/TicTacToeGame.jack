@@ -1,37 +1,40 @@
 class TicTacToeGame {
 
     static TicTacToeGame instance;
-    field Array row1, row2, row3;
-    field boolean gameStarted, exit, end, firstRound;
-    field String p1, p2;
-    field int currentPlayer, round, playAgain;
+    field Array row1, row2, row3; // Les trois rangées du plateau de jeu, représentées par des tableaux
+    field boolean gameStarted, exit, end, firstRound; // Indicateurs de l'état du jeu
+    field String p1, p2; // Noms des joueurs
+    field int currentPlayer, round, playAgain; // Variables de gestion du joueur actif, du tour et de la reprise
 
+    // Constructeur : initialise les paramètres du jeu
     constructor TicTacToeGame new() {
-        do Screen.clearScreen();
+        do Screen.clearScreen(); // Efface l'écran
 
-        let row1 = Array.new(3);
-        let row2 = Array.new(3);
-        let row3 = Array.new(3);
+        let row1 = Array.new(3); // Initialise la première rangée
+        let row2 = Array.new(3); // Initialise la deuxième rangée
+        let row3 = Array.new(3); // Initialise la troisième rangée
 
-        do initRows();
+        do initRows(); // Réinitialise toutes les cases du plateau
 
         let gameStarted = false;
         let exit = false;
         let end = false;
 
+        // Lecture des noms des joueurs
         do Output.moveCursor(0, 0);
         let p1 = Keyboard.readLine("Nom du Joueur 1: ");
         let p2 = Keyboard.readLine("Nom du Joueur 2: ");
 
-        let currentPlayer = 1;
-        let round = 0;
-        let playAgain = 1;
+        let currentPlayer = 1; // Le joueur 1 commence
+        let round = 0; // Initialisation du compteur de tours
+        let playAgain = 1; // Contrôle de la reprise du jeu
         let gameStarted = true;
-        let firstRound = true;
+        let firstRound = true; // Indique si c'est le premier tour
 
         return this;
     }
 
+    // Réinitialise toutes les cases des rangées à 0 (cases vides)
     method void initRows() {
         var int i;
         let i = 0;
@@ -44,32 +47,38 @@ class TicTacToeGame {
         return;
     }
 
+    // Libère la mémoire allouée pour l'instance du jeu
     method void dispose() {
         do Memory.deAlloc(this);
         return;
     }
 
+    // Crée une nouvelle instance du jeu
     function void newInstance() {
         let instance = TicTacToeGame.new();
         return;
     }
 
+    // Retourne l'instance du jeu en cours
     function TicTacToeGame getInstance() {
         return instance;
     }
 
+    // Affiche le plateau de jeu et les informations sur le joueur actif
     method void display() {
         var int i;
-        do Screen.clearScreen();
-        do Screen.setColor(true);
+        do Screen.clearScreen(); // Efface l'écran pour mettre à jour l'affichage
+        do Screen.setColor(true); // Définit la couleur d'affichage
 
+        // Dessine la grille du Morpion
         do Screen.drawLine(0, 85, 511, 85);
         do Screen.drawLine(0, 170, 511, 170);
         do Screen.drawLine(170, 0, 170, 255);
         do Screen.drawLine(340, 0, 340, 255);
 
-        do drawRow();
+        do drawRow(); // Affiche les symboles sur la grille
 
+        // Affiche le joueur actif si la partie n'est pas terminée
         if (~end) {
             do Output.moveCursor(0, 43);
             do Output.printString("Joueur actif : ");
@@ -88,21 +97,24 @@ class TicTacToeGame {
         return;
     }
 
+    // Affiche les symboles (cercle ou croix) sur les cases du plateau
     method void drawRow() {
         var int i, x, y;
         let i = 0;
         while (i < 3) {
+            // Première rangée
             let x = 85 + ((2*i) * 85);
             let y = 42 + ((2*0) * 42);
 
             if (row1[i] = 1) {
-                do Screen.drawCircle(x, y, 20);
+                do Screen.drawCircle(x, y, 20); // Cercle pour le joueur 1
             } else {
                 if (row1[i] = -1) {
-                    do Screen.drawRectangle(x - 20, y - 20, x + 20, y + 20);
+                    do Screen.drawRectangle(x - 20, y - 20, x + 20, y + 20); // Carré pour le joueur 2
                 }
             }
 
+            // Deuxième rangée
             let x = 85 + ((2*i) * 85);
             let y = 42 + ((2*1) * 42);
 
@@ -114,6 +126,7 @@ class TicTacToeGame {
                 }
             }
 
+            // Troisième rangée
             let x = 85 + ((2*i) * 85);
             let y = 42 + ((2*2) * 42);
 
@@ -130,6 +143,7 @@ class TicTacToeGame {
         return;
     }
 
+    // Lit la ligne choisie par le joueur
     method int getRow(boolean firstTry) {
         var int row, x;
         if (firstTry) {
@@ -142,35 +156,41 @@ class TicTacToeGame {
         do Output.moveCursor(0, x);
         let row = Keyboard.readInt("Entrez la ligne (1-3): ");
 
+        // Vérifie si la ligne est valide
         while ((row - 1) * (3 - row) < 0) {
             do clearAskSpace();
             do Output.moveCursor(0, 0);
             let row = Keyboard.readInt("Incorrect, entrez la ligne (1-3): ");
         }
-        let row = row - 1;
+        let row = row - 1; // Conversion pour un index de tableau (0-2)
         do clearAskSpace();
         return row;
     }
 
+    // Lit la colonne choisie par le joueur
     method int getCol() {
         var int col;
         do Output.moveCursor(0, 0);
         let col = Keyboard.readInt("Entrez la colonne (1-3): ");
 
+        // Vérifie si la colonne est valide
         while ((col - 1) * (3 - col) < 0) {
             do Output.moveCursor(0, 0);
             let col = Keyboard.readInt("Incorrect, entrez la colonne (1-3): ");
         }
-        let col = col - 1;
+        let col = col - 1; // Conversion pour un index de tableau (0-2)
         do clearAskSpace();
         return col;
     }
+
+    // Efface l'espace réservé pour les questions au joueur
     method void clearAskSpace() {
         do Output.moveCursor(0, 0);
         do Output.printString("                                       ");
         return;
     }
 
+    // Vérifie si une case est libre et place le symbole du joueur actif si possible
     method boolean isPlacable(int row, int col) {
         if (row = 0) {
             if (row1[col] = 0) {
@@ -195,36 +215,33 @@ class TicTacToeGame {
                     } else {
                         return false;
                     }
-
                 }
-
             }
         }
         return false;
     }
 
     method void events() {
+        // Gère les actions d'un joueur : choix de la ligne et de la colonne pour jouer.
         var int row, col;
         var boolean placable;
 
         let row = getRow(true);
-
-
         let col = getCol();
 
-
-        let placable = isPlacable(row, col);
+        let placable = isPlacable(row, col); // Vérifie si la case est libre.
         while (~placable) {
             let row = getRow(false);
             let col = getCol();
             let placable = isPlacable(row, col);
         }
-        let round = round + 1;
+
+        let round = round + 1; // Incrémente le compteur de tours après un coup valide.
         return;
     }
 
-
     method void verifs() {
+        // Vérifie les différentes conditions de fin de partie : victoire ou égalité.
         do verifRows();
         do verifCols();
         do verifDiags();
@@ -233,92 +250,98 @@ class TicTacToeGame {
     }
 
     method void verifRows() {
+        // Vérifie si une ligne complète est occupée par le même joueur.
         if ((row1[0] = currentPlayer) & (row1[1] = currentPlayer) & (row1[2] = currentPlayer)) {
-            let end = true;
+            let end = true; // La ligne 1 est gagnante.
         }
         if ((row2[0] = currentPlayer) & (row2[1] = currentPlayer) & (row2[2] = currentPlayer)) {
-            let end = true;
+            let end = true; // La ligne 2 est gagnante.
         }
         if ((row3[0] = currentPlayer) & (row3[1] = currentPlayer) & (row3[2] = currentPlayer)) {
-            let end = true;
+            let end = true; // La ligne 3 est gagnante.
         }
         return;
     }
 
-
     method void verifCols() {
+        // Vérifie si une colonne complète est occupée par le même joueur.
         if ((row1[0] = currentPlayer) & (row2[0] = currentPlayer) & (row3[0] = currentPlayer)) {
-            let end = true;
+            let end = true; // La colonne 1 est gagnante.
         }
         if ((row1[1] = currentPlayer) & (row2[1] = currentPlayer) & (row3[1] = currentPlayer)) {
-            let end = true;
+            let end = true; // La colonne 2 est gagnante.
         }
         if ((row1[2] = currentPlayer) & (row2[2] = currentPlayer) & (row3[2] = currentPlayer)) {
-            let end = true;
+            let end = true; // La colonne 3 est gagnante.
         }
         return;
     }
 
     method void verifDiags() {
+        // Vérifie si une diagonale est occupée par le même joueur.
         if ((row1[0] = currentPlayer) & (row2[1] = currentPlayer) & (row3[2] = currentPlayer)) {
-            let end = true;
+            let end = true; // La diagonale principale est gagnante.
         }
         if ((row3[0] = currentPlayer) & (row2[1] = currentPlayer) & (row1[2] = currentPlayer)) {
-            let end = true;
+            let end = true; // La diagonale secondaire est gagnante.
         }
         return;
     }
 
-
     method void verifDraw() {
+        // Vérifie si la partie est un match nul (toutes les cases jouées sans gagnant).
         if (round = 9) {
             if (end = false) {
-                let currentPlayer = 0;
-                let end = true;
+                let currentPlayer = 0; // Indique qu'il n'y a pas de gagnant.
+                let end = true; // Fin de la partie.
             }
         }
         return;
     }
 
     method void run() {
+        // Point d'entrée principal du jeu, organise le déroulement complet de la partie.
         var int winnerLength;
-        do display();
-        while (~exit) {
-            while (~end) {
-                do events();
-                do verifs();
-                do display();
-                let currentPlayer = currentPlayer * -1;
+
+        do display(); // Affiche l'état initial du jeu.
+        while (~exit) { // Boucle principale : continue tant que le joueur ne quitte pas.
+            while (~end) { // Boucle de jeu : continue tant qu'il n'y a pas de fin de partie.
+                do events(); // Gère les actions du joueur.
+                do verifs(); // Vérifie les conditions de victoire ou d'égalité.
+                do display(); // Met à jour l'affichage après chaque coup.
+                let currentPlayer = -currentPlayer; // Change le joueur actif.
             }
 
+            // Affichage des résultats de la partie.
             do Screen.clearScreen();
             do Output.moveCursor(0, 1);
             do Output.printString("Fin de la partie! ");
             do Output.moveCursor(5, 1);
+
             if (currentPlayer = 0) {
-                do Output.printString("Aucun gagnant...");
+                do Output.printString("Aucun gagnant..."); // Cas d'égalité.
             } else {
                 if (currentPlayer = 1) {
-                    do Output.printString(p2);
+                    do Output.printString(p2); // Le joueur 2 gagne.
                     let winnerLength = p2.length();
                 } else {
-                    do Output.printString(p1);
+                    do Output.printString(p1); // Le joueur 1 gagne.
                     let winnerLength = p1.length();
                 }
-                let winnerLength = winnerLength + 1;
+                let winnerLength = winnerLength + 1; // Ajuste la longueur du message.
                 do Output.moveCursor(5, winnerLength);
-                do Output.printString(" remporte la partie!");
+                do Output.printString(" remporte la partie!"); // Affiche le gagnant.
             }
 
+            // Interaction avec l'utilisateur pour continuer ou terminer.
             do Output.moveCursor(10, 1);
             do Keyboard.readLine("Appuyez sur 'Entrer' pour afficher la partie.");
-            do display();
+            do display(); // Affiche l'état final.
             do Output.moveCursor(0, 1);
             do Keyboard.readLine("Appuyez sur 'Entrer' pour terminer la partie.");
-            let exit = true;
-            do Screen.clearScreen();
+            let exit = true; // Quitte la boucle principale.
+            do Screen.clearScreen(); // Nettoie l'écran avant de quitter.
         }
         return;
     }
-
 }
