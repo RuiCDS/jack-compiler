@@ -22,6 +22,30 @@ class Reader:
             return {'line': self._line, 'col': self._col, 'char': self.char}
         return None  # Si le caractère est None, fin du fichier
 
+
+    def look2(self):
+        """Retourne un dictionnaire avec le caractère suivant après le caractère actuel, sans avancer."""
+        # Sauvegarde de l'état actuel
+        current_char = self.char
+        current_line = self._line
+        current_col = self._col
+
+        # Avance temporairement pour obtenir le prochain caractère
+        self.next()
+
+        # Si un caractère suivant existe, sauvegarde ses informations
+        if self.char:
+            look2_result = {'line': self._line, 'col': self._col, 'char': self.char}
+        else:
+            look2_result = None
+
+        # Restaure l'état initial
+        self.char = current_char
+        self._line = current_line
+        self._col = current_col
+
+        return look2_result
+
     def next(self):
         """Lit le prochain caractère et met à jour la ligne et la colonne."""
         if self.char:

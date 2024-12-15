@@ -1,6 +1,6 @@
 import re
 import sys
-import Reader  # Vous devez avoir une classe Reader pour que ce code fonctionne
+import Reader
 
 
 class Lexer:
@@ -93,9 +93,10 @@ class Lexer:
             char = t['char']
             match char:
                 case '/':  # Détection des commentaires de type //
-                    next_char = self.reader.next()  # Lire le prochain caractère
+                    next_char = self.reader.look2() # Lire le prochain caractère
                     if next_char is not None and next_char['char'] == '/':
-                        self._comment()  # Appeler la méthode pour ignorer le commentaire
+                        self._comment()
+                        print("rui")# Appeler la méthode pour ignorer le commentaire
                         continue  # Recommencer la boucle pour lire le prochain token
                     else:
                         token = char # Si ce n'est pas un commentaire, traiter le '/'
