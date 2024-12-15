@@ -66,7 +66,7 @@ class TicTacToeGame {
 
     // Affiche le plateau de jeu et les informations sur le joueur actif
     method void display() {
-        var int i;
+        var int i, playerLength;
         do Screen.clearScreen(); // Efface l'écran pour mettre à jour l'affichage
         do Screen.setColor(true); // Définit la couleur d'affichage
 
@@ -80,7 +80,17 @@ class TicTacToeGame {
 
         // Affiche le joueur actif si la partie n'est pas terminée
         if (~end) {
-            do Output.moveCursor(0, 43);
+            if (firstRound) {
+                let playerLength = p1.length();
+            } else {
+                if (currentPlayer = -1) {
+                    let playerLength = p1.length();
+                } else {
+                    let playerLength = p2.length();
+                }
+            }
+
+            do Output.moveCursor(0, 49-playerLength);
             do Output.printString("Joueur actif : ");
             if (firstRound) {
                 do Output.printString(p1);
@@ -191,7 +201,7 @@ class TicTacToeGame {
     }
 
     // Vérifie si une case est libre et place le symbole du joueur actif si possible
-    method boolean isPlacable(int row, int col) {
+    method boolean isPlaceable(int row, int col) {
         if (row = 0) {
             if (row1[col] = 0) {
                 let row1[col] = currentPlayer;
@@ -224,16 +234,16 @@ class TicTacToeGame {
     method void events() {
         // Gère les actions d'un joueur : choix de la ligne et de la colonne pour jouer.
         var int row, col;
-        var boolean placable;
+        var boolean placeable;
 
         let row = getRow(true);
         let col = getCol();
 
-        let placable = isPlacable(row, col); // Vérifie si la case est libre.
-        while (~placable) {
+        let placeable = isPlaceable(row, col); // Vérifie si la case est libre.
+        while (~placeable) {
             let row = getRow(false);
             let col = getCol();
-            let placable = isPlacable(row, col);
+            let placeable = isPlaceable(row, col);
         }
 
         let round = round + 1; // Incrémente le compteur de tours après un coup valide.
