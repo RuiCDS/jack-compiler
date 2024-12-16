@@ -1,0 +1,7 @@
+class Sys {
+    function void init() {
+        // Initialisation du système
+        do Main.main(); // Appelle la méthode principale du programme
+        return;
+    }
+}

@@ -39,7 +39,7 @@ class Main {
     method boolean verifPlayAgain(int playAgain) {
         if (playAgain = 1) {
             return true;
-        } 
+        }
 
         if (playAgain = 0) {
             return true;
