@@ -2,6 +2,7 @@ class Main {
     function void main() {
         // Déclaration de variables locales
         var int playAgain;       // Variable pour décider si le joueur souhaite rejouer (1 = oui, 0 = non)
+        var boolean correctInput;
         var TicTacToeGame game;  // Instance de la classe TicTacToeGame pour gérer le jeu de Morpion
 
         // Initialisation de playAgain à 1, signifiant que le joueur veut jouer
@@ -21,11 +22,29 @@ class Main {
 
             // Demande à l'utilisateur s'il souhaite rejouer
             let playAgain = Keyboard.readInt("Entrer 1 pour jouer, 0 sinon: ");
+            let correctInput = verifPlayAgain(playAgain);
+            while (~correctInput) {
+                do Output.moveCursor(0, 10);
+                let playAgain = Keyboard.readInt("Erreur, entrer 1 pour jouer, 0 sinon: ");
+                let correctInput = verifPlayAgain(playAgain);
+            }
         }
 
         // Lorsque le joueur ne souhaite plus jouer, l'écran est nettoyé
         do Screen.clearScreen();
 
         return;  // Arrêt du programme
+    }
+
+    method boolean verifPlayAgain(int playAgain) {
+        if (playAgain = 1) {
+            return true;
+        } 
+
+        if (playAgain = 0) {
+            return true;
+        }
+
+        return false;
     }
 }
